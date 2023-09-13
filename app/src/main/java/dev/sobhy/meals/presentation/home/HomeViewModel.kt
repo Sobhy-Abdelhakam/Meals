@@ -11,7 +11,6 @@ import dev.sobhy.meals.domain.usecase.UseCases
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -29,17 +28,14 @@ class HomeViewModel @Inject constructor(private val useCases: UseCases) : ViewMo
 
     fun getRandomMeal() {
         viewModelScope.launch(Dispatchers.IO) {
-//            try {
+            try {
                 val randomResponse = useCases.getRandomMeal()
-                randomResponse.collect{meal ->
-                    _homeState.update {
-                        it.copy(mealDetails = meal)
-                    }
+                _homeState.update {
+                    it.copy(mealDetails = randomResponse)
                 }
-
-//            } catch (e: Exception) {
-//                Log.e("viewModel", e.message.toString())
-//            }
+            } catch (e: Exception) {
+                Log.e("viewModel", e.message.toString())
+            }
         }
     }
 

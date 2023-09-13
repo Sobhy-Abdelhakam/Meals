@@ -1,6 +1,8 @@
 package dev.sobhy.meals.data.local
 
 import androidx.room.Dao
+import androidx.room.Delete
+import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Upsert
 import dev.sobhy.meals.domain.model.area.Area
@@ -19,8 +21,12 @@ interface RoomDao {
     @Query("select * from areas")
     suspend fun getAllAreas(): List<Area>
 
-    @Upsert(entity = Meal::class)
-    suspend fun insertRandomMeal(meal: Meal)
-    @Query("SELECT * FROM meal ORDER BY RANDOM() LIMIT 1")
-    suspend fun getRandomMeal(): Meal
+    @Insert(entity = Meal::class)
+    suspend fun insertFavoriteMeal(meal: Meal)
+    @Delete(entity = Meal::class)
+    suspend fun deleteMealFromFavorite(meal: Meal)
+    @Query("select * from meal where idMeal = :id")
+    suspend fun getFavoriteMealById(id: String): Meal
+    @Query("SELECT * FROM meal")
+    suspend fun getFavoriteMeals(): List<Meal>
 }

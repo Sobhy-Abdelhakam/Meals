@@ -1,34 +1,38 @@
 package dev.sobhy.meals.presentation.mealdetails
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Fastfood
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.SmartDisplay
 import androidx.compose.material.icons.outlined.Flag
 import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material3.Card
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -37,16 +41,37 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
+import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.YouTubePlayer
+import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.listeners.AbstractYouTubePlayerListener
+import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.views.YouTubePlayerView
+import dev.sobhy.meals.AppBarState
 import dev.sobhy.meals.domain.model.meal.Meal
-import dev.sobhy.meals.ui.theme.md_theme_light_secondaryContainer
 import me.onebone.toolbar.CollapsingToolbarScaffold
 import me.onebone.toolbar.ScrollStrategy
 import me.onebone.toolbar.rememberCollapsingToolbarScaffoldState
+import kotlin.reflect.full.memberProperties
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MealDetailsScreen(mealViewModel: MealDetailsViewModel, mealId: Int?) {
+fun MealDetailsScreen(
+    mealViewModel: MealDetailsViewModel,
+    navController: NavHostController,
+    mealId: Int?,
+    onComposing: (AppBarState) -> Unit
+) {
+    LaunchedEffect(key1 = true) {
+        onComposing(
+            AppBarState(
+                show = false,
+                title = "",
+                actions = { }
+            )
+        )
+    }
+
+
     mealViewModel.getMeal(mealId!!)
     val state by mealViewModel.mealState.collectAsState()
     CollapsingToolbarScaffold(
@@ -54,46 +79,19 @@ fun MealDetailsScreen(mealViewModel: MealDetailsViewModel, mealId: Int?) {
         state = rememberCollapsingToolbarScaffoldState(),
         scrollStrategy = ScrollStrategy.EnterAlwaysCollapsed,
         toolbar = {
-            state.meal?.let {
-                AsyncImage(
-                    model = it.strMealThumb,
-                    contentDescription = it.strMeal,
-                    contentScale = ContentScale.FillBounds,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(300.dp)
+            state.meal?.let { meal ->
+                ToolbarContent(
+                    meal = meal,
+                    mealViewModel = mealViewModel,
+                    navController = navController
                 )
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.ArrowBack,
-                        contentDescription = "",
-                        modifier = Modifier
-                            .size(40.dp)
-                            .background(Color.White, shape = CircleShape)
-                            .padding(8.dp)
-                    )
-                    Icon(
-                        imageVector = Icons.Filled.Favorite,
-                        contentDescription = "",
-                        tint = Color.Red,
-                        modifier = Modifier
-                            .size(40.dp)
-                            .background(Color.White, shape = CircleShape)
-                            .padding(8.dp)
-                    )
-                }
             }
         },
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(md_theme_light_secondaryContainer)
+                .background(MaterialTheme.colorScheme.background)
         ) {
             Row(
                 modifier = Modifier
@@ -102,7 +100,9 @@ fun MealDetailsScreen(mealViewModel: MealDetailsViewModel, mealId: Int?) {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row {
+                Row(modifier = Modifier.clickable {
+
+                }) {
                     Icon(
                         imageVector = Icons.Filled.Fastfood,
                         contentDescription = "Category Icon"
@@ -113,7 +113,9 @@ fun MealDetailsScreen(mealViewModel: MealDetailsViewModel, mealId: Int?) {
                         modifier = Modifier.padding(start = 4.dp)
                     )
                 }
-                Row {
+                Row(modifier = Modifier.clickable {
+
+                }) {
                     Icon(
                         imageVector = Icons.Outlined.Flag,
                         contentDescription = "Area Icon",
@@ -124,12 +126,17 @@ fun MealDetailsScreen(mealViewModel: MealDetailsViewModel, mealId: Int?) {
                         modifier = Modifier.padding(start = 4.dp)
                     )
                 }
-                Icon(
-                    imageVector = Icons.Filled.SmartDisplay,
-                    contentDescription = "YouTube Icon",
-                    modifier = Modifier.size(40.dp),
-                    tint = Color.Red
-                )
+                IconButton(onClick = {
+
+                }) {
+                    Icon(
+                        imageVector = Icons.Filled.SmartDisplay,
+                        contentDescription = "YouTube Icon",
+                        modifier = Modifier.size(40.dp),
+                        tint = Color.Red
+                    )
+                }
+
             }
             Card(
                 shape = RoundedCornerShape(topStart = 50.dp, topEnd = 50.dp),
@@ -140,87 +147,178 @@ fun MealDetailsScreen(mealViewModel: MealDetailsViewModel, mealId: Int?) {
                         .verticalScroll(rememberScrollState())
                         .padding(16.dp)
                 ) {
-                    Text(
-                        text = state.meal?.strMeal ?: "",
-                        fontSize = 25.sp,
-                        color = Color.Black,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                    )
-                    Text(text = "- Ingredients", color = Color.Black)
-                    state.meal?.let {meal ->
-                        val meal = meal
-                        repeat(20) {
-                            val ingredientProperty = Meal::class.java.getDeclaredField("strIngredient${it+1}")
-                            ingredientProperty.isAccessible = true
-                            val ingredientValue = ingredientProperty.get(meal) as? String
+                    state.meal?.let { meal ->
+                        Text(
+                            text = meal.strMeal,
+                            fontSize = 25.sp,
+                            color = Color.Black,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                        )
 
-                            val measureProp = Meal::class.java.getDeclaredField("strMeasure${it+1}")
-                            measureProp.isAccessible = true
-                            val measure = measureProp.get(meal) as? String
+                        Text(
+                            text = "- Ingredients",
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(vertical = 8.dp)
+                        )
+                        IngredientsScopeContent(meal = meal)
 
-                            // Check if the ingredient value is not null or empty before using it
-                            if (!ingredientValue.isNullOrBlank()) {
+                        Text(
+                            text = "- Instructions",
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(vertical = 8.dp)
+                        )
+                        Text(
+                            text = meal.strInstructions,
+                            modifier = Modifier.padding(8.dp),
+                            textAlign = TextAlign.Center
+                        )
 
-                                Text(text = "${it + 1}- $measure $ingredientValue")
-                            }
+                        Text(
+                            text = "- Watch meal prep",
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(vertical = 8.dp)
+                        )
+                        if(meal.strYoutube.isNotEmpty()){
+                            YoutubeScreen(videoUrl = meal.strYoutube)
+                        } else {
+                            Text(
+                                text = "There is no video for this meal",
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp)
+                            )
                         }
                     }
-
                 }
             }
         }
     }
 }
 
-//@Preview
-//@Composable
-//fun MealDetailScreen() {
-//    val scrollState = rememberScrollState()
-//
-//    val maxImageHeight = with(LocalDensity.current) { 100.dp.toPx().roundToInt() }
-//
-//    var imageScaleFactor by remember {
-//        mutableStateOf(1f)
-//    }
-//
-//    LaunchedEffect(scrollState.value) {
-//        val offset = scrollState.value
-//        imageScaleFactor = 1f - (offset / maxImageHeight)
-//    }
-//
-//
-//    Column(
-//        modifier = Modifier
-//            .fillMaxSize()
-//            .verticalScroll(state = scrollState)
-//    ) {
-//        // Cover Image
-//        Box(modifier = Modifier.fillMaxWidth()) {
-//            Icon(
-//                imageVector = Icons.Filled.ArrowBack,
-//                contentDescription = "",
-//                modifier = Modifier.align(Alignment.TopStart)
-//            )
-//            Icon(
-//                imageVector = Icons.Filled.FavoriteBorder,
-//                contentDescription = "",
-//                modifier = Modifier.align(Alignment.TopEnd)
-//            )
-//        }
-//        Image(
-//            painter = painterResource(id = R.drawable.landscape), // Replace with your image resource
-//            contentDescription = null,
-//            contentScale = ContentScale.Crop,
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .height((maxImageHeight * imageScaleFactor).dp)
-//        )
-//        repeat(100){
-//            Text(text = "Pla pla pla pla pla")
-//        }
-//
-//    }
-//}
+@Composable
+fun ToolbarContent(
+    meal: Meal,
+    mealViewModel: MealDetailsViewModel,
+    navController: NavHostController
+) {
+    AsyncImage(
+        model = meal.strMealThumb,
+        contentDescription = meal.strMeal,
+        contentScale = ContentScale.FillBounds,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(300.dp)
+    )
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Icon(
+            imageVector = Icons.Rounded.ArrowBack,
+            contentDescription = "",
+            modifier = Modifier
+                .size(40.dp)
+                .background(color = MaterialTheme.colorScheme.background, shape = CircleShape)
+                .padding(8.dp)
+                .clickable {
+                    navController.popBackStack()
+                }
+        )
+        var favoriteIconState by remember {
+            mutableStateOf(meal.isFavorite)
+        }
+        IconButton(onClick = {
+            favoriteIconState = if (meal.isFavorite.not()) {
+                mealViewModel.insertFavoriteMeal(meal)
+                true
+            } else {
+                mealViewModel.deleteMealFromFavorite(meal)
+                false
+            }
+        }) {
+            Icon(
+                imageVector = Icons.Filled.Favorite,
+                contentDescription = "",
+                tint = if (favoriteIconState) Color.Red else Color.LightGray,
+                modifier = Modifier
+                    .size(40.dp)
+                    .background(MaterialTheme.colorScheme.background, shape = CircleShape)
+                    .padding(8.dp)
+            )
+
+        }
+
+    }
+}
+
+@Composable
+fun IngredientsScopeContent(meal: Meal) {
+    for (indexOfForLoop in 1..20 step (4)) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(2.dp),
+            horizontalArrangement = Arrangement.SpaceAround
+        ) {
+            repeat(4) { repeatIndex ->
+                // reflection using kotlin
+                val ingredientValue = Meal::class.memberProperties
+                    .find {
+                        it.name == "strIngredient${indexOfForLoop + repeatIndex}"
+                    }?.get(meal) as String
+
+                val measure = Meal::class.memberProperties.find {
+                    it.name == "strMeasure${indexOfForLoop + repeatIndex}"
+                }?.get(meal).toString()
+
+                // Check if the ingredient value is empty before using it
+                // if the ingredient is empty, this mean that all ingredients after that is empty
+                if (ingredientValue.isBlank()) return
+
+                Card(modifier = Modifier.width(80.dp)) {
+                    Column(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        AsyncImage(
+                            model = "https://www.themealdb.com/images/ingredients/$ingredientValue.png",
+                            contentDescription = "",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.size(80.dp)
+                        )
+                        Text(
+                            text = "$measure $ingredientValue",
+                            modifier = Modifier
+                                .padding(4.dp)
+                                .align(Alignment.CenterHorizontally)
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun YoutubeScreen(videoUrl: String) {
+    val videoId = videoUrl.substring(videoUrl.indexOf("v=") + 2)
+    AndroidView(factory = {
+        val view = YouTubePlayerView(it)
+        view.addYouTubePlayerListener(
+            object : AbstractYouTubePlayerListener() {
+                override fun onReady(youTubePlayer: YouTubePlayer) {
+                    super.onReady(youTubePlayer)
+                    youTubePlayer.cueVideo(videoId, 0f)
+                }
+            }
+        )
+        view
+    })
+}

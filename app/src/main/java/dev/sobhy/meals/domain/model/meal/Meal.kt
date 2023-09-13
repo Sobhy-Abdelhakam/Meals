@@ -58,5 +58,7 @@ data class Meal(
     val strSource: String?,
     val strImageSource: String?,
     val strCreativeCommonsConfirmed: String?,
-    val dateModified: String?
+    val dateModified: String?,
+
+    var isFavorite: Boolean = false
 )

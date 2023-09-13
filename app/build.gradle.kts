@@ -69,6 +69,8 @@ dependencies {
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
+    // kotlin reflect
+    implementation(kotlin("reflect"))
 
     // material icons
     implementation ("androidx.compose.material:material-icons-extended:1.5.1")
@@ -98,4 +100,9 @@ dependencies {
 
     // toolbar
     implementation("me.onebone:toolbar-compose:2.3.5")
+
+    implementation ("com.pierfrancescosoffritti.androidyoutubeplayer:core:11.1.0")
+
+    // for system ui controll
+    implementation ("com.google.accompanist:accompanist-systemuicontroller:0.30.1")
 }

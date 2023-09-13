@@ -30,22 +30,23 @@ class RepositoryImpl(
         }.flowOn(Dispatchers.IO)
     }
 
-    override suspend fun getMealDetails(id: Int) = apiService.getMealById(id)
+    override suspend fun getMealDetails(id: Int) = flow {
+        val idsOfFavoriteMeals = roomDao.getFavoriteMeals().map {
+            it.idMeal
+        }
+        val mealFromApi = apiService.getMealById(id).meals.first()
+        if(mealFromApi.idMeal in idsOfFavoriteMeals){
+            val meal = roomDao.getFavoriteMealById(id.toString())
+            emit(meal)
+        } else {
+            emit(mealFromApi)
+        }
+    }
+//        apiService.getMealById(id)
 
     override suspend fun getMealsContainString(name: String) = apiService.getMealsByName(name)
 
-    override suspend fun getRandomMeal() = flow {
-        val randomCachedMeal = roomDao.getRandomMeal()
-        emit(randomCachedMeal)
-        try {
-            val randomRemoteMeal = apiService.getSingleRandomMeal().meals.first()
-            roomDao.insertRandomMeal(randomRemoteMeal)
-//            emit(randomRemoteMeal)
-        } catch (e: Exception){
-            Log.e("repository", e.message.toString())
-        }
-    }.flowOn(Dispatchers.IO)
-//        apiService.getSingleRandomMeal().meals.first()
+    override suspend fun getRandomMeal() = apiService.getSingleRandomMeal().meals.first()
 
     override suspend fun getMealsByCategory(category: String) =
         apiService.getMealsByCategory(category)
@@ -69,5 +70,9 @@ class RepositoryImpl(
 //        apiService.getAreasList()
 
     override suspend fun getMealsByArea(area: String) = apiService.getMealsByArea(area)
+
+    override suspend fun insertFavoriteMeal(meal: Meal) = roomDao.insertFavoriteMeal(meal)
+    override suspend fun deleteMealFromFavorite(meal: Meal) = roomDao.deleteMealFromFavorite(meal)
+    override suspend fun getFavoriteMeals() = roomDao.getFavoriteMeals()
 
 }

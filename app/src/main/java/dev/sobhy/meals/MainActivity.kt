@@ -6,14 +6,14 @@ import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -35,43 +35,37 @@ import dev.sobhy.meals.ui.theme.MealsTheme
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContent {
             MealsTheme {
+                var appBarState by remember {
+                    mutableStateOf(AppBarState())
+                }
                 Scaffold(
-//                    topBar = {
-//                        TopAppBar(
-//                            title = {
-//                                Text(
-//                                    text = "Meals",
-//                                    fontSize = 24.sp,
-//                                    fontFamily = FontFamily(Font(R.font.charm_bold)),
-//                                    modifier = Modifier.padding(2.dp)
-//                                )
-//                            },
-//                            actions = {
-//                                OutlinedTextField(
-//                                    value = "",
-//                                    onValueChange = {},
-//                                    leadingIcon = {
-//                                        Icon(
-//                                            imageVector = Icons.Default.Search,
-//                                            contentDescription = ""
-//                                        )
-//                                    },
-//                                    placeholder = {
-//                                        Text(text = "Search for meal")
-//                                    },
-//                                    modifier = Modifier
-//                                        .padding(4.dp)
-//                                )
-//                            }
-//                        )
-//                    }
+                    topBar = {
+                        if(appBarState.show){
+                            TopAppBar(
+                                title = {
+                                    Text(
+                                        text = appBarState.title,
+                                        fontSize = 24.sp,
+                                        fontFamily = FontFamily(Font(R.font.charm_bold)),
+                                        modifier = Modifier.padding(2.dp)
+                                    )
+                                },
+                                actions = {
+                                    appBarState.actions?.invoke(this)
+                                }
+                            )
+                        }
+                    }
                 ) {
                     Column(modifier = Modifier.padding(it)) {
+
                         val navController = rememberNavController()
                         NavHost(
                             navController = navController,
@@ -79,7 +73,9 @@ class MainActivity : ComponentActivity() {
                         ) {
                             composable("home") {
                                 val viewModel: HomeViewModel by viewModels()
-                                HomeScreen(viewModel, navController)
+                                HomeScreen(viewModel, navController) { state ->
+                                    appBarState = state
+                                }
                             }
                             composable(
                                 route = "meals_list/{from}/{thing}",
@@ -96,7 +92,12 @@ class MainActivity : ComponentActivity() {
                                 // // Extract the parameters from the URL
                                 val from = entry.arguments?.getString("from")
                                 val thing = entry.arguments?.getString("thing")
-                                MealsListScreen(mealsViewModel, from, thing, navController)
+                                MealsListScreen(
+                                    mealsViewModel,
+                                    from, thing,
+                                    navController,
+                                    onComposing = { state -> appBarState = state}
+                                )
                             }
                             composable(
                                 route = "meal_details/{meal_id}",
@@ -108,7 +109,12 @@ class MainActivity : ComponentActivity() {
                             ){entry ->
                                 val mealViewModel: MealDetailsViewModel by viewModels()
                                 val mealId = entry.arguments?.getInt("meal_id")
-                                MealDetailsScreen(mealViewModel, mealId)
+                                MealDetailsScreen(
+                                    mealViewModel,
+                                    navController,
+                                    mealId,
+                                    onComposing = { state -> appBarState = state}
+                                )
                             }
                         }
 

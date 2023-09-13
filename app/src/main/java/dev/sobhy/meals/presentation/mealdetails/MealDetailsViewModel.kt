@@ -12,21 +12,36 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class MealDetailsViewModel @Inject constructor(private val useCases: UseCases):ViewModel() {
+class MealDetailsViewModel @Inject constructor(private val useCases: UseCases) : ViewModel() {
     private val _mealState = MutableStateFlow(MealDetailsState())
     val mealState = _mealState.asStateFlow()
 
-    fun getMeal(id: Int){
+    fun getMeal(id: Int) {
         viewModelScope.launch {
             _mealState.update {
-                it.copy(isLoading = true)
+                it.copy(isLoading = true, meal = null)
             }
-            val meal = useCases.getMealDetails(id).meals.first()
-            _mealState.update {
-                it.copy(isLoading = false, meal = meal)
+            useCases.getMealDetails(id).collect { meal ->
+                _mealState.update {
+                    it.copy(isLoading = false, meal = meal)
+                }
             }
         }
     }
+
+    fun insertFavoriteMeal(meal: Meal) = viewModelScope.launch {
+        useCases.insertFavoriteMeal(meal.also {
+            it.isFavorite = true
+        })
+    }
+
+    fun deleteMealFromFavorite(meal: Meal) = viewModelScope.launch {
+        useCases.deleteMealFromFavorite(meal.also {
+            it.isFavorite = false
+        })
+    }
+
+
 }
 
 data class MealDetailsState(

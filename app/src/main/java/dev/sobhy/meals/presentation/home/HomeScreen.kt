@@ -2,7 +2,6 @@ package dev.sobhy.meals.presentation.home
 
 import android.content.Context
 import android.net.ConnectivityManager
-import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.scrollable
@@ -22,7 +21,12 @@ import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -44,24 +48,54 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
+import dev.sobhy.meals.AppBarState
 import dev.sobhy.mealzapp.ui.composable.Loader
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
-fun HomeScreen(viewModel: HomeViewModel, navController: NavHostController) {
+fun HomeScreen(
+    viewModel: HomeViewModel,
+    navController: NavHostController,
+    onComposing: (AppBarState) -> Unit
+) {
     val state by viewModel.homeState.collectAsState()
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     var loop by remember { mutableStateOf(false) }
 
     DisposableEffect(context) {
+        onComposing(
+            AppBarState(
+                show = true,
+                title = "Meals",
+                actions = {
+                    IconButton(onClick = { /*TODO*/ }) {
+                        Icon(
+                            imageVector = Icons.Filled.Search,
+                            contentDescription = "Search",
+                            modifier = Modifier
+                                .padding(6.dp),
+//                                        tint = Color.Black
+                        )
+                    }
+                    IconButton(onClick = { /*TODO*/ }) {
+                        Icon(
+                            imageVector = Icons.Filled.Favorite,
+                            contentDescription = "Favorite",
+                            modifier = Modifier
+                                .padding(6.dp),
+//                                        tint = Color.Black
+                        )
+                    }
+                }
+            )
+        )
         // executed when the composable is first composed
         loop = true
         coroutineScope.launch {
             // asynchronous initialization logic
             while (loop) {
-                Log.e("homeScreen", "this in loop")
                 viewModel.getRandomMeal()
                 delay(5000)
             }
@@ -82,7 +116,7 @@ fun HomeScreen(viewModel: HomeViewModel, navController: NavHostController) {
             )
     ) {
         Box { Loader(shouldShow = state.isLoading) }
-        RandomMealCard(state = state)
+        RandomMealCard(state = state, navController = navController, context = context)
 
         Spacer(modifier = Modifier.height(10.dp))
         Text(text = "Categories", fontWeight = FontWeight.Bold, modifier = Modifier.padding(6.dp))
@@ -95,32 +129,36 @@ fun HomeScreen(viewModel: HomeViewModel, navController: NavHostController) {
 }
 
 @Composable
-fun RandomMealCard(state: HomeState) {
+fun RandomMealCard(state: HomeState, navController: NavHostController, context: Context) {
     Card(modifier = Modifier.padding(8.dp)) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .fillMaxHeight(0.25f)
         ) {
+            if(isNetworkConnected(context).not()){
+                Text(
+                    text = "No internet connection",
+                    fontSize = 25.sp,
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            }
             state.mealDetails?.let {
-                Log.e("HomeScreen", state.mealDetails.toString())
                 AsyncImage(
                     model = it.strMealThumb,
                     contentDescription = "",
                     contentScale = ContentScale.FillBounds,
                     modifier = Modifier
                         .fillMaxWidth()
+                        .clickable {
+                            navController
+                                .navigate("meal_details/${it.idMeal.toInt()}")
+                        }
                 )
                 Text(
                     text = it.strMeal,
                     fontSize = 25.sp,
                     color = Color.Black,
-//                        style = LocalTextStyle.current.merge(
-//                            TextStyle(
-//                                color = Color.White,
-//                                drawStyle = Stroke(width = 5f)
-//                            )
-//                        ),
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier
                         .align(Alignment.BottomStart)
@@ -136,7 +174,7 @@ fun CategoriesLazyGrid(state: HomeState, navController: NavHostController) {
     LazyHorizontalGrid(
         contentPadding = PaddingValues(8.dp),
         rows = GridCells.Fixed(2),
-        modifier = Modifier.fillMaxHeight(0.5f)
+        modifier = Modifier.fillMaxHeight(0.5f),
     ) {
         items(state.categoryResponse) {
             Column(

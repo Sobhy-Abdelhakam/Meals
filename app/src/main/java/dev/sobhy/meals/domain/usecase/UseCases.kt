@@ -1,5 +1,6 @@
 package dev.sobhy.meals.domain.usecase
 
+import dev.sobhy.meals.domain.model.meal.Meal
 import dev.sobhy.meals.domain.repository.Repository
 
 class UseCases(
@@ -22,4 +23,8 @@ class UseCases(
     suspend fun getAreasList() = repository.getAreasList()
 
     suspend fun getMealsByArea(area: String) = repository.getMealsByArea(area)
+
+    suspend fun insertFavoriteMeal(meal: Meal) = repository.insertFavoriteMeal(meal)
+    suspend fun deleteMealFromFavorite(meal: Meal) = repository.deleteMealFromFavorite(meal)
+    suspend fun getFavoriteMeals() = repository.getFavoriteMeals()
 }
