@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.Flow
 interface Repository {
     suspend fun getCategoryResponse(): Flow<List<Category>>
     suspend fun getMealDetails(id: Int): Flow<Meal>
-    suspend fun getMealsContainString(name: String): MealDetails
+    suspend fun getMealsContainString(name: String): List<Meal>
     suspend fun getRandomMeal(): Meal
     suspend fun getMealsByCategory(category: String): MealsByThingList
     suspend fun getIngredientsList(): IngredientsList

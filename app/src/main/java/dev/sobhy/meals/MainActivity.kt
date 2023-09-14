@@ -19,12 +19,15 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import dagger.hilt.android.AndroidEntryPoint
+import dev.sobhy.meals.presentation.favoriteandsearch.FavAndSearchScreen
+import dev.sobhy.meals.presentation.favoriteandsearch.FavAndSearchViewModel
 import dev.sobhy.meals.presentation.home.HomeScreen
 import dev.sobhy.meals.presentation.home.HomeViewModel
 import dev.sobhy.meals.presentation.mealdetails.MealDetailsScreen
@@ -32,6 +35,7 @@ import dev.sobhy.meals.presentation.mealdetails.MealDetailsViewModel
 import dev.sobhy.meals.presentation.meals.MealsListScreen
 import dev.sobhy.meals.presentation.meals.MealsListViewModel
 import dev.sobhy.meals.ui.theme.MealsTheme
+import dev.sobhy.meals.util.AppBarState
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -45,6 +49,7 @@ class MainActivity : ComponentActivity() {
                 var appBarState by remember {
                     mutableStateOf(AppBarState())
                 }
+
                 Scaffold(
                     topBar = {
                         if(appBarState.show){
@@ -52,7 +57,7 @@ class MainActivity : ComponentActivity() {
                                 title = {
                                     Text(
                                         text = appBarState.title,
-                                        fontSize = 24.sp,
+                                        fontSize = 32.sp,
                                         fontFamily = FontFamily(Font(R.font.charm_bold)),
                                         modifier = Modifier.padding(2.dp)
                                     )
@@ -94,11 +99,30 @@ class MainActivity : ComponentActivity() {
                                 val thing = entry.arguments?.getString("thing")
                                 MealsListScreen(
                                     mealsViewModel,
-                                    from, thing,
+                                    from,
+                                    thing,
                                     navController,
                                     onComposing = { state -> appBarState = state}
                                 )
                             }
+                            composable(
+                                route = "fav_search/{from}",
+                                arguments = listOf(
+                                    navArgument("from"){
+                                        type = NavType.StringType
+                                    }
+                                )
+                            ){entry ->
+                                val favAndSearchViewModel: FavAndSearchViewModel by viewModels()
+                                val from = entry.arguments?.getString("from")
+                                FavAndSearchScreen(
+                                    favAndSearchViewModel = favAndSearchViewModel,
+                                    from = from,
+                                    navController = navController,
+                                    onComposing = { state -> appBarState = state }
+                                    )
+                            }
+
                             composable(
                                 route = "meal_details/{meal_id}",
                                 arguments = listOf(

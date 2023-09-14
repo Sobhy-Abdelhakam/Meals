@@ -35,16 +35,16 @@ class RepositoryImpl(
             it.idMeal
         }
         val mealFromApi = apiService.getMealById(id).meals.first()
-        if(mealFromApi.idMeal in idsOfFavoriteMeals){
+        if (mealFromApi.idMeal in idsOfFavoriteMeals) {
             val meal = roomDao.getFavoriteMealById(id.toString())
             emit(meal)
         } else {
             emit(mealFromApi)
         }
     }
-//        apiService.getMealById(id)
 
-    override suspend fun getMealsContainString(name: String) = apiService.getMealsByName(name)
+    override suspend fun getMealsContainString(name: String) =
+        apiService.getMealsByName(name).meals
 
     override suspend fun getRandomMeal() = apiService.getSingleRandomMeal().meals.first()
 
@@ -63,11 +63,10 @@ class RepositoryImpl(
             val remoteAreas = apiService.getAreasList().meals
             roomDao.insertAllAreas(remoteAreas)
             emit(remoteAreas)
-        } catch (e: Exception){
+        } catch (e: Exception) {
             Log.e("repository", e.message.toString())
         }
     }.flowOn(Dispatchers.IO)
-//        apiService.getAreasList()
 
     override suspend fun getMealsByArea(area: String) = apiService.getMealsByArea(area)
 

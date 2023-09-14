@@ -40,7 +40,7 @@ class HomeViewModel @Inject constructor(private val useCases: UseCases) : ViewMo
     }
 
     private fun getCategories() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             _homeState.update {
                 it.copy(isLoading = true)
             }
@@ -54,10 +54,10 @@ class HomeViewModel @Inject constructor(private val useCases: UseCases) : ViewMo
     }
 
     private fun getAreas() {
-        viewModelScope.launch {
-            _homeState.update {
-                it.copy(isLoading = true)
-            }
+        _homeState.update {
+            it.copy(isLoading = true)
+        }
+        viewModelScope.launch(Dispatchers.IO) {
             val areasResponse = useCases.getAreasList()
             areasResponse.collect { areas ->
                 _homeState.update {

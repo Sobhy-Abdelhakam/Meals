@@ -1,10 +1,12 @@
 package dev.sobhy.meals.presentation.mealdetails
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.sobhy.meals.domain.model.meal.Meal
 import dev.sobhy.meals.domain.usecase.UseCases
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -17,34 +19,36 @@ class MealDetailsViewModel @Inject constructor(private val useCases: UseCases) :
     val mealState = _mealState.asStateFlow()
 
     fun getMeal(id: Int) {
-        viewModelScope.launch {
-            _mealState.update {
-                it.copy(isLoading = true, meal = null)
-            }
-            useCases.getMealDetails(id).collect { meal ->
-                _mealState.update {
-                    it.copy(isLoading = false, meal = meal)
+        _mealState.update {
+            it.copy(mealDetailsLoading = true, meal = null)
+        }
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                useCases.getMealDetails(id).collect { meal ->
+                    _mealState.update {
+                        it.copy(mealDetailsLoading = false, meal = meal)
+                    }
                 }
+            } catch (e: Exception){
+                Log.e("mealDetails view model", e.message.toString())
             }
         }
     }
 
-    fun insertFavoriteMeal(meal: Meal) = viewModelScope.launch {
+    fun insertFavoriteMeal(meal: Meal) = viewModelScope.launch(Dispatchers.IO) {
         useCases.insertFavoriteMeal(meal.also {
             it.isFavorite = true
         })
     }
 
-    fun deleteMealFromFavorite(meal: Meal) = viewModelScope.launch {
+    fun deleteMealFromFavorite(meal: Meal) = viewModelScope.launch(Dispatchers.IO) {
         useCases.deleteMealFromFavorite(meal.also {
             it.isFavorite = false
         })
     }
-
-
 }
 
 data class MealDetailsState(
-    val isLoading: Boolean = false,
+    val mealDetailsLoading: Boolean = false,
     val meal: Meal? = null
 )

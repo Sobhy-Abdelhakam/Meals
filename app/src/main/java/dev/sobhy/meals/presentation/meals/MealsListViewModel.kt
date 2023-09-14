@@ -1,10 +1,13 @@
 package dev.sobhy.meals.presentation.meals
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dev.sobhy.meals.domain.model.meal.Meal
 import dev.sobhy.meals.domain.model.mealsbything.MealByThing
 import dev.sobhy.meals.domain.usecase.UseCases
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -17,31 +20,47 @@ class MealsListViewModel @Inject constructor(private val useCases: UseCases): Vi
     val mealsState = _mealsState.asStateFlow()
 
     fun getMealsByCategory(category: String){
-        viewModelScope.launch {
-            _mealsState.update {
-                it.copy(isLoading = true)
-            }
-            val response = useCases.getMealsByCategory(category)
-            _mealsState.update {
-                it.copy(isLoading = false, mealsList = response.meals)
+        _mealsState.update {
+            it.copy(mealsList = emptyList(),mealsListLoading = true)
+        }
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                _mealsState.update {
+                    it.copy(
+                        mealsListLoading = false,
+                        mealsList = useCases
+                            .getMealsByCategory(category)
+                            .meals
+                    )
+                }
+            } catch (e: Exception){
+                Log.e("meals list view model", e.message.toString())
             }
         }
     }
 
     fun getMealsByArea(area: String){
-        viewModelScope.launch {
-            _mealsState.update {
-                it.copy(isLoading = true)
-            }
-            val response = useCases.getMealsByArea(area)
-            _mealsState.update {
-                it.copy(isLoading = false, mealsList = response.meals)
+        _mealsState.update {
+            it.copy(mealsList = emptyList(), mealsListLoading = true)
+        }
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                _mealsState.update {
+                    it.copy(
+                        mealsListLoading = false,
+                        mealsList = useCases
+                            .getMealsByArea(area)
+                            .meals
+                    )
+                }
+            } catch (e: Exception){
+                Log.e("meals list view model", e.message.toString())
             }
         }
     }
 
 }
 data class MealsState(
-    val isLoading: Boolean = false,
-    val mealsList: List<MealByThing> = emptyList()
+    val mealsListLoading: Boolean = false,
+    val mealsList: List<MealByThing> = emptyList(),
 )

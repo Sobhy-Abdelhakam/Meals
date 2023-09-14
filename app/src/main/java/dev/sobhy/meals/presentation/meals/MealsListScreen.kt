@@ -1,7 +1,6 @@
 package dev.sobhy.meals.presentation.meals
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -23,9 +22,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
-import dev.sobhy.meals.AppBarState
 import dev.sobhy.meals.domain.model.mealsbything.MealByThing
-import dev.sobhy.mealzapp.ui.composable.Loader
+import dev.sobhy.meals.util.AnimatedShimmer
+import dev.sobhy.meals.util.AppBarState
 
 @Composable
 fun MealsListScreen(
@@ -35,28 +34,25 @@ fun MealsListScreen(
     navController: NavHostController,
     onComposing: (AppBarState) -> Unit
 ) {
+    when (from) {
+        "category" -> mealsViewModel.getMealsByCategory(thing!!)
+        "area" -> mealsViewModel.getMealsByArea(thing!!)
+    }
+
     LaunchedEffect(key1 = true) {
         onComposing(
             AppBarState(
                 show = true,
                 title = thing ?: "",
                 actions = { }
-            )
+            ),
         )
     }
 
-
-    when(from){
-        "category" -> mealsViewModel.getMealsByCategory(thing!!)
-        "area" -> mealsViewModel.getMealsByArea(thing!!)
-    }
-
     val mealsState by mealsViewModel.mealsState.collectAsState()
-    Box {
-        Loader(shouldShow = mealsState.isLoading)
-    }
-    LazyVerticalGrid(columns = GridCells.Fixed(2)){
-        items(mealsState.mealsList){meal ->
+
+    LazyVerticalGrid(columns = GridCells.Fixed(2)) {
+        items(mealsState.mealsList) { meal ->
             MealsItem(
                 meal,
                 onItemClick = {
@@ -65,10 +61,11 @@ fun MealsListScreen(
             )
         }
     }
+    AnimatedShimmer(showShimmer = mealsState.mealsListLoading)
 }
 
 @Composable
-fun MealsItem(mealByThing: MealByThing, onItemClick: ()-> Unit) {
+fun MealsItem(mealByThing: MealByThing, onItemClick: () -> Unit) {
     Card(modifier = Modifier
         .padding(8.dp)
         .clickable { onItemClick() }) {
@@ -80,7 +77,6 @@ fun MealsItem(mealByThing: MealByThing, onItemClick: ()-> Unit) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(200.dp)
-//                    .fillMaxHeight(0.25f)
             )
             Text(
                 text = mealByThing.strMeal,

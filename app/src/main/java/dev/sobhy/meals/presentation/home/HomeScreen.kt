@@ -48,8 +48,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
-import dev.sobhy.meals.AppBarState
-import dev.sobhy.mealzapp.ui.composable.Loader
+import dev.sobhy.meals.util.AppBarState
+import dev.sobhy.meals.ui.composable.Loader
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -70,22 +70,24 @@ fun HomeScreen(
                 show = true,
                 title = "Meals",
                 actions = {
-                    IconButton(onClick = { /*TODO*/ }) {
+                    IconButton(onClick = {
+                        navController.navigate("fav_search/search")
+                    }) {
                         Icon(
                             imageVector = Icons.Filled.Search,
                             contentDescription = "Search",
                             modifier = Modifier
                                 .padding(6.dp),
-//                                        tint = Color.Black
                         )
                     }
-                    IconButton(onClick = { /*TODO*/ }) {
+                    IconButton(onClick = {
+                        navController.navigate("fav_search/favorites")
+                    }) {
                         Icon(
                             imageVector = Icons.Filled.Favorite,
                             contentDescription = "Favorite",
                             modifier = Modifier
                                 .padding(6.dp),
-//                                        tint = Color.Black
                         )
                     }
                 }
@@ -181,7 +183,8 @@ fun CategoriesLazyGrid(state: HomeState, navController: NavHostController) {
                 modifier = Modifier
                     .padding(horizontal = 4.dp)
                     .clickable {
-                        navController.navigate("meals_list/category/${it.strCategory}")
+                        navController
+                            .navigate("meals_list/category/${it.strCategory}")
                     },
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {

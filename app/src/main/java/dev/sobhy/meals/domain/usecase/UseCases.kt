@@ -10,7 +10,8 @@ class UseCases(
 
     suspend fun getMealDetails(id: Int) = repository.getMealDetails(id)
 
-    suspend fun getMealsContainString(name: String) = repository.getMealsContainString(name)
+    suspend fun getMealsContainString(name: String) =
+        repository.getMealsContainString(name)
 
     suspend fun getRandomMeal() = repository.getRandomMeal()
 
@@ -18,7 +19,8 @@ class UseCases(
 
     suspend fun getIngredientsList() = repository.getIngredientsList()
 
-    suspend fun getMealsByIngredients(ingredient: String) = repository.getMealsByIngredients(ingredient)
+    suspend fun getMealsByIngredients(ingredient: String) =
+        repository.getMealsByIngredients(ingredient)
 
     suspend fun getAreasList() = repository.getAreasList()
 

@@ -1,4 +1,4 @@
-package dev.sobhy.meals
+package dev.sobhy.meals.util
 
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.runtime.Composable

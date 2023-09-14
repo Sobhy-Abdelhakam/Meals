@@ -1,4 +1,4 @@
-package dev.sobhy.mealzapp.ui.composable
+package dev.sobhy.meals.ui.composable
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement

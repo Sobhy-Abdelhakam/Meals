@@ -1,8 +1,11 @@
 package dev.sobhy.meals.presentation.mealdetails
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -37,6 +40,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -47,8 +51,9 @@ import coil.compose.AsyncImage
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.YouTubePlayer
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.listeners.AbstractYouTubePlayerListener
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.views.YouTubePlayerView
-import dev.sobhy.meals.AppBarState
+import dev.sobhy.meals.util.AppBarState
 import dev.sobhy.meals.domain.model.meal.Meal
+import dev.sobhy.meals.ui.composable.Loader
 import me.onebone.toolbar.CollapsingToolbarScaffold
 import me.onebone.toolbar.ScrollStrategy
 import me.onebone.toolbar.rememberCollapsingToolbarScaffoldState
@@ -61,6 +66,7 @@ fun MealDetailsScreen(
     mealId: Int?,
     onComposing: (AppBarState) -> Unit
 ) {
+    mealViewModel.getMeal(mealId!!)
     LaunchedEffect(key1 = true) {
         onComposing(
             AppBarState(
@@ -70,10 +76,12 @@ fun MealDetailsScreen(
             )
         )
     }
+    val context = LocalContext.current
 
-
-    mealViewModel.getMeal(mealId!!)
     val state by mealViewModel.mealState.collectAsState()
+
+    Box { Loader(shouldShow = state.mealDetailsLoading) }
+
     CollapsingToolbarScaffold(
         modifier = Modifier.fillMaxWidth(),
         state = rememberCollapsingToolbarScaffoldState(),
@@ -100,9 +108,7 @@ fun MealDetailsScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(modifier = Modifier.clickable {
-
-                }) {
+                Row{
                     Icon(
                         imageVector = Icons.Filled.Fastfood,
                         contentDescription = "Category Icon"
@@ -113,9 +119,7 @@ fun MealDetailsScreen(
                         modifier = Modifier.padding(start = 4.dp)
                     )
                 }
-                Row(modifier = Modifier.clickable {
-
-                }) {
+                Row{
                     Icon(
                         imageVector = Icons.Outlined.Flag,
                         contentDescription = "Area Icon",
@@ -127,6 +131,11 @@ fun MealDetailsScreen(
                     )
                 }
                 IconButton(onClick = {
+                    state.meal?.let {
+                        if(it.strYoutube.isNotEmpty()){
+                            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(it.strYoutube)))
+                        }
+                    }
 
                 }) {
                     Icon(
