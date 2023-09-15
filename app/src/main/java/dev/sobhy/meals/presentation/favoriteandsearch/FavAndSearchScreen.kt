@@ -98,12 +98,8 @@ fun FavAndSearchScreen(
             modifier = Modifier.align(Alignment.Center)
         )
 
-        if (favAndSearchState.responseMealsList.isEmpty() && from.equals("favorites")) {
-            Text(
-                text = "There are no favorite meals",
-                fontSize = 25.sp,
-                modifier = Modifier.padding(16.dp)
-            )
+        if (from.equals("favorites")) {
+            NoFavoriteText(shouldTextShow = favAndSearchState.responseMealsList.isEmpty())
         }
 
 
@@ -152,4 +148,14 @@ fun MealsItem(meal: Meal, onItemClick: () -> Unit) {
 fun Loading(showLoader: Boolean, modifier: Modifier) {
     if (showLoader.not()) return
     CircularProgressIndicator(modifier = modifier)
+}
+
+@Composable
+fun NoFavoriteText(shouldTextShow: Boolean) {
+    if(shouldTextShow.not()) return
+    Text(
+        text = "There are no favorite meals",
+        fontSize = 25.sp,
+        modifier = Modifier.padding(16.dp)
+    )
 }

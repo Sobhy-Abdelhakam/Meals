@@ -51,6 +51,7 @@ fun MealsListScreen(
 
     val mealsState by mealsViewModel.mealsState.collectAsState()
 
+    AnimatedShimmer(showShimmer = mealsState.mealsListLoading)
     LazyVerticalGrid(columns = GridCells.Fixed(2)) {
         items(mealsState.mealsList) { meal ->
             MealsItem(
@@ -61,7 +62,7 @@ fun MealsListScreen(
             )
         }
     }
-    AnimatedShimmer(showShimmer = mealsState.mealsListLoading)
+
 }
 
 @Composable

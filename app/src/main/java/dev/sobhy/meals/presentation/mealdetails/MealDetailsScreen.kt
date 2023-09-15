@@ -76,9 +76,9 @@ fun MealDetailsScreen(
             )
         )
     }
-    val context = LocalContext.current
 
     val state by mealViewModel.mealState.collectAsState()
+    val context = LocalContext.current
 
     Box { Loader(shouldShow = state.mealDetailsLoading) }
 

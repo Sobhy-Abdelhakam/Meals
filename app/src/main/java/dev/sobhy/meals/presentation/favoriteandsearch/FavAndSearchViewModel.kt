@@ -20,12 +20,16 @@ class FavAndSearchViewModel @Inject constructor(private val useCases: UseCases) 
     fun getFavoriteMeals(){
         viewModelScope.launch {
             _favState.update {
-                it.copy(searchFavLoading = true, responseMealsList = emptyList())
+                it.copy(responseMealsList = useCases.getFavoriteMeals())
             }
-            val response = useCases.getFavoriteMeals()
-            _favState.update {
-                it.copy(searchFavLoading = false, responseMealsList = response)
-            }
+
+//            _favState.update {
+//                it.copy(searchFavLoading = true, responseMealsList = emptyList())
+//            }
+//            val response = useCases.getFavoriteMeals()
+//            _favState.update {
+//                it.copy(searchFavLoading = false, responseMealsList = response)
+//            }
         }
     }
 
@@ -46,9 +50,10 @@ class FavAndSearchViewModel @Inject constructor(private val useCases: UseCases) 
     }
 
     fun makeListEmpty(){
-        _favState.update {
-            it.copy(responseMealsList = emptyList())
-        }
+        _favState.value = FavAndSearchState(
+            searchFavLoading = false,
+            responseMealsList = emptyList()
+        )
     }
 
 }

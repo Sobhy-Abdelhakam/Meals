@@ -19,9 +19,7 @@ class MealDetailsViewModel @Inject constructor(private val useCases: UseCases) :
     val mealState = _mealState.asStateFlow()
 
     fun getMeal(id: Int) {
-        _mealState.update {
-            it.copy(mealDetailsLoading = true, meal = null)
-        }
+        _mealState.value = MealDetailsState(meal = null, mealDetailsLoading = true)
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 useCases.getMealDetails(id).collect { meal ->

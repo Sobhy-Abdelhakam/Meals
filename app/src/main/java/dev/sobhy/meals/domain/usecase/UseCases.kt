@@ -17,11 +17,6 @@ class UseCases(
 
     suspend fun getMealsByCategory(category: String) = repository.getMealsByCategory(category)
 
-    suspend fun getIngredientsList() = repository.getIngredientsList()
-
-    suspend fun getMealsByIngredients(ingredient: String) =
-        repository.getMealsByIngredients(ingredient)
-
     suspend fun getAreasList() = repository.getAreasList()
 
     suspend fun getMealsByArea(area: String) = repository.getMealsByArea(area)
