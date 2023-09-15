@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
+import dev.sobhy.meals.presentation.UiState
 import dev.sobhy.meals.domain.model.meal.Meal
 import dev.sobhy.meals.util.AppBarState
 
@@ -45,13 +46,14 @@ fun FavAndSearchScreen(
     onComposing: (AppBarState) -> Unit
 ) {
     if (from.equals("favorites")) {
-        favAndSearchViewModel.getFavoriteMeals()
+        LaunchedEffect(key1 = Unit) {
+            favAndSearchViewModel.getFavoriteMeals()
+        }
     }
 
     var textSearch by remember {
         mutableStateOf("")
     }
-
     LaunchedEffect(key1 = true) {
         onComposing(
             AppBarState(
@@ -66,7 +68,7 @@ fun FavAndSearchScreen(
                                 if (textSearch.isNotEmpty()) {
                                     favAndSearchViewModel
                                         .getMealsContainString(textSearch)
-                                } else{
+                                } else {
                                     favAndSearchViewModel.makeListEmpty()
                                 }
                             },
@@ -89,31 +91,44 @@ fun FavAndSearchScreen(
             )
         )
     }
-
     val favAndSearchState by favAndSearchViewModel.favState.collectAsState()
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        Loading(
-            showLoader = favAndSearchState.searchFavLoading,
-            modifier = Modifier.align(Alignment.Center)
-        )
-
-        if (from.equals("favorites")) {
-            NoFavoriteText(shouldTextShow = favAndSearchState.responseMealsList.isEmpty())
+    when (favAndSearchState) {
+        is UiState.Error -> {
+            val error = (favAndSearchState as UiState.Error).message
+            Text(text = error)
         }
-
-
-        LazyVerticalGrid(columns = GridCells.Fixed(2)) {
-            items(favAndSearchState.responseMealsList) { meal ->
-                MealsItem(
-                    meal,
-                    onItemClick = {
-                        navController.navigate("meal_details/${meal.idMeal.toInt()}")
-                    }
-                )
+        UiState.Loading -> {
+            Box (modifier = Modifier.fillMaxSize()){
+                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             }
         }
 
+        is UiState.Success -> {
+            val mealsList = (favAndSearchState as UiState.Success).data
+            if (from.equals("favorites")) {
+                NoFavoriteText(shouldTextShow = mealsList!!.isEmpty())
+            }
+            Box (modifier = Modifier.fillMaxSize()){
+                mealsList?.let {
+                    LazyVerticalGrid(columns = GridCells.Fixed(2)) {
+                        items(it) { meal ->
+                            MealsItem(
+                                meal,
+                                onItemClick = {
+                                    navController.navigate("meal_details/${meal.idMeal.toInt()}")
+                                }
+                            )
+                        }
+                    }
+                } ?: Text(
+                    text = "Write the correct name of the meal",
+                    fontSize = 20.sp,
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            }
+
+        }
     }
 }
 
@@ -145,14 +160,8 @@ fun MealsItem(meal: Meal, onItemClick: () -> Unit) {
 }
 
 @Composable
-fun Loading(showLoader: Boolean, modifier: Modifier) {
-    if (showLoader.not()) return
-    CircularProgressIndicator(modifier = modifier)
-}
-
-@Composable
 fun NoFavoriteText(shouldTextShow: Boolean) {
-    if(shouldTextShow.not()) return
+    if (shouldTextShow.not()) return
     Text(
         text = "There are no favorite meals",
         fontSize = 25.sp,

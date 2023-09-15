@@ -22,8 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun AnimatedShimmer(showShimmer: Boolean) {
-    if (showShimmer.not()) return
+fun AnimatedShimmer() {
 
     val shimmerColor = listOf(
         Color.LightGray.copy(alpha = 0.6f),

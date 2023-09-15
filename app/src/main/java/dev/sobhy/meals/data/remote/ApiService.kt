@@ -2,7 +2,6 @@ package dev.sobhy.meals.data.remote
 
 import dev.sobhy.meals.domain.model.area.AreaList
 import dev.sobhy.meals.domain.model.category.CategoryResponse
-import dev.sobhy.meals.domain.model.ingredients.IngredientsList
 import dev.sobhy.meals.domain.model.meal.MealDetails
 import dev.sobhy.meals.domain.model.mealsbything.MealsByThingList
 import retrofit2.http.GET
@@ -26,15 +25,6 @@ interface ApiService {
 
     @GET("random.php")
     suspend fun getSingleRandomMeal(): MealDetails
-
-    @GET("list.php?i=list")
-    suspend fun getIngredientsList(): IngredientsList
-
-    @GET("filter.php")
-    suspend fun getMealsByIngredient(
-        @Query("i")
-        ingredient: String
-    ): MealsByThingList
 
     @GET("filter.php")
     suspend fun getMealsByCategory(

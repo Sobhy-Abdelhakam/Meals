@@ -1,36 +1,40 @@
 package dev.sobhy.meals.presentation.mealdetails
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dev.sobhy.meals.presentation.UiState
 import dev.sobhy.meals.domain.model.meal.Meal
-import dev.sobhy.meals.domain.usecase.UseCases
+import dev.sobhy.meals.domain.usecase.MealDetailsUseCase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class MealDetailsViewModel @Inject constructor(private val useCases: UseCases) : ViewModel() {
-    private val _mealState = MutableStateFlow(MealDetailsState())
+class MealDetailsViewModel @Inject constructor(
+    private val useCases: MealDetailsUseCase
+) : ViewModel() {
+    private val _mealState = MutableStateFlow<UiState<Meal>>(UiState.Loading)
     val mealState = _mealState.asStateFlow()
 
     fun getMeal(id: Int) {
-        _mealState.value = MealDetailsState(meal = null, mealDetailsLoading = true)
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                useCases.getMealDetails(id).collect { meal ->
-                    _mealState.update {
-                        it.copy(mealDetailsLoading = false, meal = meal)
-                    }
+        viewModelScope.launch(Dispatchers.Main) {
+            _mealState.value = UiState.Loading
+            useCases.getMealDetails(id)
+//            useCases.getMealDetails(id)
+                .flowOn(Dispatchers.IO)
+                .catch {e ->
+                    _mealState.value = UiState.Error(e.toString())
                 }
-            } catch (e: Exception){
-                Log.e("mealDetails view model", e.message.toString())
-            }
+                .collect{meal ->
+                    _mealState.value = UiState.Success(meal)
+                }
         }
+
     }
 
     fun insertFavoriteMeal(meal: Meal) = viewModelScope.launch(Dispatchers.IO) {
@@ -46,7 +50,7 @@ class MealDetailsViewModel @Inject constructor(private val useCases: UseCases) :
     }
 }
 
-data class MealDetailsState(
-    val mealDetailsLoading: Boolean = false,
-    val meal: Meal? = null
-)
+//data class MealDetailsState(
+//    val mealDetailsLoading: Boolean = false,
+//    val meal: Meal? = null
+//)

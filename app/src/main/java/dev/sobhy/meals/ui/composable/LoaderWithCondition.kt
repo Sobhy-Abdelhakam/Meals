@@ -18,7 +18,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 
 @Composable
-fun Loader() {
+fun LoaderWithCondition(shouldShow: Boolean) {
+    if (shouldShow.not()) return
     Dialog(onDismissRequest = { /*TODO*/ }) {
         Column(
             modifier = Modifier

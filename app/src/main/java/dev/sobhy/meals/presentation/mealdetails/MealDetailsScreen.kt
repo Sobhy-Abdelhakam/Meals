@@ -1,7 +1,9 @@
 package dev.sobhy.meals.presentation.mealdetails
 
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -51,9 +53,10 @@ import coil.compose.AsyncImage
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.YouTubePlayer
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.listeners.AbstractYouTubePlayerListener
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.views.YouTubePlayerView
-import dev.sobhy.meals.util.AppBarState
+import dev.sobhy.meals.presentation.UiState
 import dev.sobhy.meals.domain.model.meal.Meal
 import dev.sobhy.meals.ui.composable.Loader
+import dev.sobhy.meals.util.AppBarState
 import me.onebone.toolbar.CollapsingToolbarScaffold
 import me.onebone.toolbar.ScrollStrategy
 import me.onebone.toolbar.rememberCollapsingToolbarScaffoldState
@@ -66,8 +69,8 @@ fun MealDetailsScreen(
     mealId: Int?,
     onComposing: (AppBarState) -> Unit
 ) {
-    mealViewModel.getMeal(mealId!!)
-    LaunchedEffect(key1 = true) {
+    LaunchedEffect(key1 = Unit){
+        mealViewModel.getMeal(mealId!!)
         onComposing(
             AppBarState(
                 show = false,
@@ -76,24 +79,47 @@ fun MealDetailsScreen(
             )
         )
     }
-
-    val state by mealViewModel.mealState.collectAsState()
     val context = LocalContext.current
+    val state by mealViewModel.mealState.collectAsState()
 
-    Box { Loader(shouldShow = state.mealDetailsLoading) }
+    when (state) {
+        is UiState.Loading -> {
+            Box { Loader() }
+        }
 
+        is UiState.Success -> {
+            val meal = (state as UiState.Success).data
+            DetailsScreenContent(
+                meal,
+                mealViewModel,
+                navController,
+                context
+            )
+        }
+        is UiState.Error -> {
+            Toast.makeText(context, "error", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+}
+
+@Composable
+fun DetailsScreenContent(
+    meal: Meal,
+    mealViewModel: MealDetailsViewModel,
+    navController: NavHostController,
+    context: Context
+) {
     CollapsingToolbarScaffold(
         modifier = Modifier.fillMaxWidth(),
         state = rememberCollapsingToolbarScaffoldState(),
         scrollStrategy = ScrollStrategy.EnterAlwaysCollapsed,
         toolbar = {
-            state.meal?.let { meal ->
-                ToolbarContent(
-                    meal = meal,
-                    mealViewModel = mealViewModel,
-                    navController = navController
-                )
-            }
+            ToolbarContent(
+                meal = meal,
+                mealViewModel = mealViewModel,
+                navController = navController
+            )
         },
     ) {
         Column(
@@ -108,33 +134,36 @@ fun MealDetailsScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row{
+                Row {
                     Icon(
                         imageVector = Icons.Filled.Fastfood,
                         contentDescription = "Category Icon"
                     )
                     Text(
-                        text = state.meal?.strCategory ?: "",
+                        text = meal.strCategory,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(start = 4.dp)
                     )
                 }
-                Row{
+                Row {
                     Icon(
                         imageVector = Icons.Outlined.Flag,
                         contentDescription = "Area Icon",
                     )
                     Text(
-                        text = state.meal?.strArea ?: "",
+                        text = meal.strArea,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(start = 4.dp)
                     )
                 }
                 IconButton(onClick = {
-                    state.meal?.let {
-                        if(it.strYoutube.isNotEmpty()){
-                            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(it.strYoutube)))
-                        }
+                    if (meal.strYoutube.isNotEmpty()) {
+                        context.startActivity(
+                            Intent(
+                                Intent.ACTION_VIEW,
+                                Uri.parse(meal.strYoutube)
+                            )
+                        )
                     }
 
                 }) {
@@ -156,51 +185,49 @@ fun MealDetailsScreen(
                         .verticalScroll(rememberScrollState())
                         .padding(16.dp)
                 ) {
-                    state.meal?.let { meal ->
+                    Text(
+                        text = meal.strMeal,
+                        fontSize = 25.sp,
+                        color = Color.Black,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                    )
+
+                    Text(
+                        text = "- Ingredients",
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+                    IngredientsScopeContent(meal = meal)
+
+                    Text(
+                        text = "- Instructions",
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+                    Text(
+                        text = meal.strInstructions,
+                        modifier = Modifier.padding(8.dp),
+                        textAlign = TextAlign.Center
+                    )
+
+                    Text(
+                        text = "- Watch meal prep",
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+                    if (meal.strYoutube.isNotEmpty()) {
+                        YoutubeScreen(videoUrl = meal.strYoutube)
+                    } else {
                         Text(
-                            text = meal.strMeal,
-                            fontSize = 25.sp,
-                            color = Color.Black,
-                            fontWeight = FontWeight.Bold,
+                            text = "There is no video for this meal",
                             textAlign = TextAlign.Center,
                             modifier = Modifier
                                 .fillMaxWidth()
+                                .padding(16.dp)
                         )
-
-                        Text(
-                            text = "- Ingredients",
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(vertical = 8.dp)
-                        )
-                        IngredientsScopeContent(meal = meal)
-
-                        Text(
-                            text = "- Instructions",
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(vertical = 8.dp)
-                        )
-                        Text(
-                            text = meal.strInstructions,
-                            modifier = Modifier.padding(8.dp),
-                            textAlign = TextAlign.Center
-                        )
-
-                        Text(
-                            text = "- Watch meal prep",
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(vertical = 8.dp)
-                        )
-                        if(meal.strYoutube.isNotEmpty()){
-                            YoutubeScreen(videoUrl = meal.strYoutube)
-                        } else {
-                            Text(
-                                text = "There is no video for this meal",
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp)
-                            )
-                        }
                     }
                 }
             }

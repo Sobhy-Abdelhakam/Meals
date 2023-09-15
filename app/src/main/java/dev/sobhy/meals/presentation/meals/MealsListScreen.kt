@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
+import dev.sobhy.meals.presentation.UiState
 import dev.sobhy.meals.domain.model.mealsbything.MealByThing
 import dev.sobhy.meals.util.AnimatedShimmer
 import dev.sobhy.meals.util.AppBarState
@@ -34,12 +35,7 @@ fun MealsListScreen(
     navController: NavHostController,
     onComposing: (AppBarState) -> Unit
 ) {
-    when (from) {
-        "category" -> mealsViewModel.getMealsByCategory(thing!!)
-        "area" -> mealsViewModel.getMealsByArea(thing!!)
-    }
-
-    LaunchedEffect(key1 = true) {
+    LaunchedEffect(key1 = Unit){
         onComposing(
             AppBarState(
                 show = true,
@@ -47,22 +43,32 @@ fun MealsListScreen(
                 actions = { }
             ),
         )
+        when (from) {
+            "category" -> mealsViewModel.getMealsByCategory(thing!!)
+            "area" -> mealsViewModel.getMealsByArea(thing!!)
+        }
     }
 
     val mealsState by mealsViewModel.mealsState.collectAsState()
 
-    AnimatedShimmer(showShimmer = mealsState.mealsListLoading)
-    LazyVerticalGrid(columns = GridCells.Fixed(2)) {
-        items(mealsState.mealsList) { meal ->
-            MealsItem(
-                meal,
-                onItemClick = {
-                    navController.navigate("meal_details/${meal.idMeal.toInt()}")
+    when(mealsState){
+        is UiState.Error -> {
+        }
+        UiState.Loading -> AnimatedShimmer()
+        is UiState.Success -> {
+            val meals = (mealsState as UiState.Success).data
+            LazyVerticalGrid(columns = GridCells.Fixed(2)) {
+                items(meals) { meal ->
+                    MealsItem(
+                        meal,
+                        onItemClick = {
+                            navController.navigate("meal_details/${meal.idMeal.toInt()}")
+                        }
+                    )
                 }
-            )
+            }
         }
     }
-
 }
 
 @Composable

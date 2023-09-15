@@ -2,6 +2,8 @@ package dev.sobhy.meals.presentation.home
 
 import android.content.Context
 import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.scrollable
@@ -49,7 +51,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import dev.sobhy.meals.util.AppBarState
-import dev.sobhy.meals.ui.composable.Loader
+import dev.sobhy.meals.ui.composable.LoaderWithCondition
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -117,7 +119,7 @@ fun HomeScreen(
                 enabled = true
             )
     ) {
-        Box { Loader(shouldShow = state.isLoading) }
+        Box { LoaderWithCondition(shouldShow = state.isLoading) }
         RandomMealCard(state = state, navController = navController, context = context)
 
         Spacer(modifier = Modifier.height(10.dp))
@@ -226,6 +228,21 @@ fun AreasLazyGrid(state: HomeState, navController: NavHostController) {
 fun isNetworkConnected(context: Context): Boolean {
     val connectivityManager =
         context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-    val activeNetworkInfo = connectivityManager.activeNetworkInfo
-    return activeNetworkInfo != null && activeNetworkInfo.isConnected
+    if (connectivityManager != null) {
+        val capabilities =
+            connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
+        if (capabilities != null) {
+            if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
+                Log.i("Internet", "NetworkCapabilities.TRANSPORT_CELLULAR")
+                return true
+            } else if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
+                Log.i("Internet", "NetworkCapabilities.TRANSPORT_WIFI")
+                return true
+            } else if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) {
+                Log.i("Internet", "NetworkCapabilities.TRANSPORT_ETHERNET")
+                return true
+            }
+        }
+    }
+    return false
 }
