@@ -3,7 +3,6 @@ package dev.sobhy.meals.presentation.home
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
-import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.scrollable
@@ -38,7 +37,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -50,9 +48,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
+import dev.sobhy.meals.ui.composable.Loader
 import dev.sobhy.meals.util.AppBarState
-import dev.sobhy.meals.ui.composable.LoaderWithCondition
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 @Composable
@@ -61,12 +61,11 @@ fun HomeScreen(
     navController: NavHostController,
     onComposing: (AppBarState) -> Unit
 ) {
-    val state by viewModel.homeState.collectAsState()
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
-    var loop by remember { mutableStateOf(false) }
+    val job = remember { mutableStateOf<Job?>(null) }
 
-    DisposableEffect(context) {
+    DisposableEffect(key1 = context) {
         onComposing(
             AppBarState(
                 show = true,
@@ -95,20 +94,18 @@ fun HomeScreen(
                 }
             )
         )
-        // executed when the composable is first composed
-        loop = true
-        coroutineScope.launch {
-            // asynchronous initialization logic
-            while (loop) {
+        job.value = coroutineScope.launch {
+            while (isActive) {
                 viewModel.getRandomMeal()
                 delay(5000)
             }
         }
         onDispose {
-            // executed when the composable is removed from the composition
-            loop = false
+            job.value?.cancel()
         }
     }
+
+    val state by viewModel.homeState.collectAsState()
 
     Column(
         modifier = Modifier
@@ -119,7 +116,7 @@ fun HomeScreen(
                 enabled = true
             )
     ) {
-        Box { LoaderWithCondition(shouldShow = state.isLoading) }
+        Box { Loader(shouldShow = state.isLoading) }
         RandomMealCard(state = state, navController = navController, context = context)
 
         Spacer(modifier = Modifier.height(10.dp))
@@ -140,34 +137,35 @@ fun RandomMealCard(state: HomeState, navController: NavHostController, context: 
                 .fillMaxWidth()
                 .fillMaxHeight(0.25f)
         ) {
-            if(isNetworkConnected(context).not()){
+            if (isNetworkConnected(context).not()) {
                 Text(
                     text = "No internet connection",
-                    fontSize = 25.sp,
+                    fontSize = 23.sp,
                     modifier = Modifier.align(Alignment.Center)
                 )
-            }
-            state.mealDetails?.let {
-                AsyncImage(
-                    model = it.strMealThumb,
-                    contentDescription = "",
-                    contentScale = ContentScale.FillBounds,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable {
-                            navController
-                                .navigate("meal_details/${it.idMeal.toInt()}")
-                        }
-                )
-                Text(
-                    text = it.strMeal,
-                    fontSize = 25.sp,
-                    color = Color.Black,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier
-                        .align(Alignment.BottomStart)
-                        .padding(16.dp)
-                )
+            } else {
+                state.mealDetails?.let {
+                    AsyncImage(
+                        model = it.strMealThumb,
+                        contentDescription = "",
+                        contentScale = ContentScale.FillBounds,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                navController
+                                    .navigate("meal_details/${it.idMeal.toInt()}")
+                            }
+                    )
+                    Text(
+                        text = it.strMeal,
+                        fontSize = 23.sp,
+                        color = Color.Black,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier
+                            .align(Alignment.BottomStart)
+                            .padding(16.dp)
+                    )
+                }
             }
         }
     }
@@ -226,23 +224,13 @@ fun AreasLazyGrid(state: HomeState, navController: NavHostController) {
 }
 
 fun isNetworkConnected(context: Context): Boolean {
-    val connectivityManager =
-        context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-    if (connectivityManager != null) {
-        val capabilities =
-            connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
-        if (capabilities != null) {
-            if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
-                Log.i("Internet", "NetworkCapabilities.TRANSPORT_CELLULAR")
-                return true
-            } else if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
-                Log.i("Internet", "NetworkCapabilities.TRANSPORT_WIFI")
-                return true
-            } else if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) {
-                Log.i("Internet", "NetworkCapabilities.TRANSPORT_ETHERNET")
-                return true
-            }
-        }
+    val connectivityManager = context
+        .getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    val network = connectivityManager.activeNetwork ?: return false
+    val activeNetwork = connectivityManager.getNetworkCapabilities(network) ?: return false
+    return when {
+        activeNetwork.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> true
+        activeNetwork.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> true
+        else -> false
     }
-    return false
 }

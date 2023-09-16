@@ -24,7 +24,6 @@ class HomeViewModel @Inject constructor(
     val homeState = _homeState.asStateFlow()
 
     init {
-        getRandomMeal()
         getCategories()
         getAreas()
     }

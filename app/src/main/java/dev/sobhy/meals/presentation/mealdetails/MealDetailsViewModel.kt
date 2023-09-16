@@ -25,7 +25,6 @@ class MealDetailsViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.Main) {
             _mealState.value = UiState.Loading
             useCases.getMealDetails(id)
-//            useCases.getMealDetails(id)
                 .flowOn(Dispatchers.IO)
                 .catch {e ->
                     _mealState.value = UiState.Error(e.toString())
@@ -34,7 +33,6 @@ class MealDetailsViewModel @Inject constructor(
                     _mealState.value = UiState.Success(meal)
                 }
         }
-
     }
 
     fun insertFavoriteMeal(meal: Meal) = viewModelScope.launch(Dispatchers.IO) {
@@ -49,8 +47,3 @@ class MealDetailsViewModel @Inject constructor(
         })
     }
 }
-
-//data class MealDetailsState(
-//    val mealDetailsLoading: Boolean = false,
-//    val meal: Meal? = null
-//)

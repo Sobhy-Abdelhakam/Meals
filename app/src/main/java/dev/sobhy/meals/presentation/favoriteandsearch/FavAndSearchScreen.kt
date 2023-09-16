@@ -33,8 +33,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
-import dev.sobhy.meals.presentation.UiState
 import dev.sobhy.meals.domain.model.meal.Meal
+import dev.sobhy.meals.presentation.UiState
+import dev.sobhy.meals.ui.composable.ErrorScreen
 import dev.sobhy.meals.util.AppBarState
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -45,16 +46,15 @@ fun FavAndSearchScreen(
     navController: NavHostController,
     onComposing: (AppBarState) -> Unit
 ) {
-    if (from.equals("favorites")) {
-        LaunchedEffect(key1 = Unit) {
-            favAndSearchViewModel.getFavoriteMeals()
-        }
-    }
-
     var textSearch by remember {
         mutableStateOf("")
     }
-    LaunchedEffect(key1 = true) {
+    LaunchedEffect(key1 = Unit) {
+        favAndSearchViewModel.makeListEmpty()
+        if (from.equals("favorites")) {
+            favAndSearchViewModel.getFavoriteMeals()
+        }
+
         onComposing(
             AppBarState(
                 show = true,
@@ -91,15 +91,13 @@ fun FavAndSearchScreen(
             )
         )
     }
+
     val favAndSearchState by favAndSearchViewModel.favState.collectAsState()
 
     when (favAndSearchState) {
-        is UiState.Error -> {
-            val error = (favAndSearchState as UiState.Error).message
-            Text(text = error)
-        }
+        is UiState.Error -> ErrorScreen(false) {}
         UiState.Loading -> {
-            Box (modifier = Modifier.fillMaxSize()){
+            Box(modifier = Modifier.fillMaxSize()) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             }
         }
@@ -109,7 +107,7 @@ fun FavAndSearchScreen(
             if (from.equals("favorites")) {
                 NoFavoriteText(shouldTextShow = mealsList!!.isEmpty())
             }
-            Box (modifier = Modifier.fillMaxSize()){
+            Box(modifier = Modifier.fillMaxSize()) {
                 mealsList?.let {
                     LazyVerticalGrid(columns = GridCells.Fixed(2)) {
                         items(it) { meal ->

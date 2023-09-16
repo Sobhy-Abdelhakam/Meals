@@ -3,7 +3,6 @@ package dev.sobhy.meals.presentation.mealdetails
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -55,6 +54,7 @@ import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.listeners.Abs
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.views.YouTubePlayerView
 import dev.sobhy.meals.presentation.UiState
 import dev.sobhy.meals.domain.model.meal.Meal
+import dev.sobhy.meals.ui.composable.ErrorScreen
 import dev.sobhy.meals.ui.composable.Loader
 import dev.sobhy.meals.util.AppBarState
 import me.onebone.toolbar.CollapsingToolbarScaffold
@@ -83,10 +83,7 @@ fun MealDetailsScreen(
     val state by mealViewModel.mealState.collectAsState()
 
     when (state) {
-        is UiState.Loading -> {
-            Box { Loader() }
-        }
-
+        is UiState.Loading -> Box { Loader() }
         is UiState.Success -> {
             val meal = (state as UiState.Success).data
             DetailsScreenContent(
@@ -96,9 +93,9 @@ fun MealDetailsScreen(
                 context
             )
         }
-        is UiState.Error -> {
-            Toast.makeText(context, "error", Toast.LENGTH_SHORT).show()
-        }
+        is UiState.Error -> ErrorScreen {
+                mealViewModel.getMeal(mealId!!)
+            }
     }
 
 }

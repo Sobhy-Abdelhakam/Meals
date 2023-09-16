@@ -29,13 +29,12 @@ class RepositoryImpl(
         val idsOfFavoriteMeals = roomDao.getFavoriteMeals().map {
             it.idMeal
         }
-        val mealFromApi = apiService.getMealById(id).meals.first()
-        if (mealFromApi.idMeal in idsOfFavoriteMeals) {
-            val meal = roomDao.getFavoriteMealById(id.toString())
-            emit(meal)
+        val meal = if (idsOfFavoriteMeals.contains(id.toString())) {
+            roomDao.getFavoriteMealById(id.toString())
         } else {
-            emit(mealFromApi)
+            apiService.getMealById(id).meals.first()
         }
+        emit(meal)
     }
 
     override fun getMealsContainString(name: String) = flow {
