@@ -47,6 +47,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.YouTubePlayer
@@ -64,7 +65,7 @@ import kotlin.reflect.full.memberProperties
 
 @Composable
 fun MealDetailsScreen(
-    mealViewModel: MealDetailsViewModel,
+    mealViewModel: MealDetailsViewModel = hiltViewModel(),
     navController: NavHostController,
     mealId: Int?,
     onComposing: (AppBarState) -> Unit

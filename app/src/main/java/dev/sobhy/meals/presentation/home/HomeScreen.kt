@@ -46,8 +46,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
+import dev.sobhy.meals.navigation.Screens
 import dev.sobhy.meals.ui.composable.Loader
 import dev.sobhy.meals.util.AppBarState
 import kotlinx.coroutines.Job
@@ -57,7 +59,7 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun HomeScreen(
-    viewModel: HomeViewModel,
+    viewModel: HomeViewModel = hiltViewModel(),
     navController: NavHostController,
     onComposing: (AppBarState) -> Unit
 ) {
@@ -72,7 +74,9 @@ fun HomeScreen(
                 title = "Meals",
                 actions = {
                     IconButton(onClick = {
-                        navController.navigate("fav_search/search")
+                        navController.navigate(
+                            "${Screens.FavAndSearchScreen.route}/search"
+                        )
                     }) {
                         Icon(
                             imageVector = Icons.Filled.Search,
@@ -82,7 +86,9 @@ fun HomeScreen(
                         )
                     }
                     IconButton(onClick = {
-                        navController.navigate("fav_search/favorites")
+                        navController.navigate(
+                            "${Screens.FavAndSearchScreen.route}/favorites"
+                        )
                     }) {
                         Icon(
                             imageVector = Icons.Filled.Favorite,
@@ -152,8 +158,9 @@ fun RandomMealCard(state: HomeState, navController: NavHostController, context: 
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
-                                navController
-                                    .navigate("meal_details/${it.idMeal.toInt()}")
+                                navController.navigate(
+                                    "${Screens.MealDetails.route}/${it.idMeal.toInt()}"
+                                )
                             }
                     )
                     Text(
@@ -183,8 +190,9 @@ fun CategoriesLazyGrid(state: HomeState, navController: NavHostController) {
                 modifier = Modifier
                     .padding(horizontal = 4.dp)
                     .clickable {
-                        navController
-                            .navigate("meals_list/category/${it.strCategory}")
+                        navController.navigate(
+                            "${Screens.MealsList.route}/category/${it.strCategory}"
+                        )
                     },
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
@@ -211,7 +219,9 @@ fun AreasLazyGrid(state: HomeState, navController: NavHostController) {
         items(state.areasResponse) {
             OutlinedButton(
                 onClick = {
-                    navController.navigate("meals_list/area/${it.strArea}")
+                    navController.navigate(
+                        "${Screens.MealsList.route}/area/${it.strArea}"
+                    )
                 },
                 modifier = Modifier
                     .padding(6.dp)

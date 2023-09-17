@@ -21,33 +21,23 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.navigation.NavType
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
 import dagger.hilt.android.AndroidEntryPoint
-import dev.sobhy.meals.presentation.favoriteandsearch.FavAndSearchScreen
-import dev.sobhy.meals.presentation.favoriteandsearch.FavAndSearchViewModel
-import dev.sobhy.meals.presentation.home.HomeScreen
-import dev.sobhy.meals.presentation.home.HomeViewModel
-import dev.sobhy.meals.presentation.mealdetails.MealDetailsScreen
-import dev.sobhy.meals.presentation.mealdetails.MealDetailsViewModel
-import dev.sobhy.meals.presentation.meals.MealsListScreen
-import dev.sobhy.meals.presentation.meals.MealsListViewModel
+import dev.sobhy.meals.navigation.Screens
+import dev.sobhy.meals.navigation.SetupNavGraph
 import dev.sobhy.meals.ui.theme.MealsTheme
 import dev.sobhy.meals.util.AppBarState
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     private val viewModel: MainViewModel by viewModels()
+
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        installSplashScreen().setKeepOnScreenCondition{
+        installSplashScreen().setKeepOnScreenCondition {
             viewModel.isLoading.value
         }
-
         setContent {
             MealsTheme {
                 var appBarState by remember {
@@ -59,78 +49,14 @@ class MainActivity : ComponentActivity() {
                     }
                 ) {
                     Column(modifier = Modifier.padding(it)) {
-
                         val navController = rememberNavController()
-                        NavHost(
+                        SetupNavGraph(
                             navController = navController,
-                            startDestination = "home"
-                        ) {
-                            composable("home") {
-                                val viewModel: HomeViewModel by viewModels()
-                                HomeScreen(viewModel, navController) { state ->
-                                    appBarState = state
-                                }
+                            startDestination = Screens.Home.route,
+                            changeAppBarState = {state ->
+                                appBarState = state
                             }
-                            composable(
-                                route = "meals_list/{from}/{thing}",
-                                arguments = listOf(
-                                    navArgument("from") {
-                                        type = NavType.StringType
-                                    },
-                                    navArgument("thing") {
-                                        type = NavType.StringType
-                                    }
-                                )
-                            ) {entry ->
-                                val mealsViewModel: MealsListViewModel by viewModels()
-                                // // Extract the parameters from the URL
-                                val from = entry.arguments?.getString("from")
-                                val thing = entry.arguments?.getString("thing")
-                                MealsListScreen(
-                                    mealsViewModel,
-                                    from,
-                                    thing,
-                                    navController,
-                                    onComposing = { state -> appBarState = state}
-                                )
-                            }
-                            composable(
-                                route = "fav_search/{from}",
-                                arguments = listOf(
-                                    navArgument("from"){
-                                        type = NavType.StringType
-                                    }
-                                )
-                            ){entry ->
-                                val favAndSearchViewModel: FavAndSearchViewModel by viewModels()
-                                val from = entry.arguments?.getString("from")
-                                FavAndSearchScreen(
-                                    favAndSearchViewModel = favAndSearchViewModel,
-                                    from = from,
-                                    navController = navController,
-                                    onComposing = { state -> appBarState = state }
-                                    )
-                            }
-
-                            composable(
-                                route = "meal_details/{meal_id}",
-                                arguments = listOf(
-                                    navArgument("meal_id"){
-                                        type = NavType.IntType
-                                    }
-                                )
-                            ){entry ->
-                                val mealViewModel: MealDetailsViewModel by viewModels()
-                                val mealId = entry.arguments?.getInt("meal_id")
-                                MealDetailsScreen(
-                                    mealViewModel,
-                                    navController,
-                                    mealId,
-                                    onComposing = { state -> appBarState = state}
-                                )
-                            }
-                        }
-
+                        )
                     }
                 }
             }
@@ -141,7 +67,7 @@ class MainActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopBarWithMutableContent(appBarState: AppBarState) {
-    if(!appBarState.show) return
+    if (!appBarState.show) return
     TopAppBar(
         title = {
             Text(

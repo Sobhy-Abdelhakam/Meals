@@ -31,9 +31,11 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import dev.sobhy.meals.domain.model.meal.Meal
+import dev.sobhy.meals.navigation.Screens
 import dev.sobhy.meals.presentation.UiState
 import dev.sobhy.meals.ui.composable.ErrorScreen
 import dev.sobhy.meals.util.AppBarState
@@ -41,7 +43,7 @@ import dev.sobhy.meals.util.AppBarState
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FavAndSearchScreen(
-    favAndSearchViewModel: FavAndSearchViewModel,
+    favAndSearchViewModel: FavAndSearchViewModel = hiltViewModel(),
     from: String?,
     navController: NavHostController,
     onComposing: (AppBarState) -> Unit
@@ -114,7 +116,9 @@ fun FavAndSearchScreen(
                             MealsItem(
                                 meal,
                                 onItemClick = {
-                                    navController.navigate("meal_details/${meal.idMeal.toInt()}")
+                                    navController.navigate(
+                                        "${Screens.MealDetails.route}/${meal.idMeal.toInt()}"
+                                    )
                                 }
                             )
                         }

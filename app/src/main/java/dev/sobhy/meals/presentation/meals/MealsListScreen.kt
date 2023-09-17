@@ -20,9 +20,11 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import dev.sobhy.meals.domain.model.mealsbything.MealByThing
+import dev.sobhy.meals.navigation.Screens
 import dev.sobhy.meals.presentation.UiState
 import dev.sobhy.meals.ui.composable.ErrorScreen
 import dev.sobhy.meals.util.AnimatedShimmer
@@ -30,7 +32,7 @@ import dev.sobhy.meals.util.AppBarState
 
 @Composable
 fun MealsListScreen(
-    mealsViewModel: MealsListViewModel,
+    mealsViewModel: MealsListViewModel = hiltViewModel(),
     from: String?,
     thing: String?,
     navController: NavHostController,
@@ -76,8 +78,9 @@ fun MealsList(meals: List<MealByThing>, navController: NavHostController) {
             MealsItem(
                 meal,
                 onItemClick = {
-                    navController
-                        .navigate("meal_details/${meal.idMeal.toInt()}")
+                    navController.navigate(
+                        "${Screens.MealDetails.route}/${meal.idMeal.toInt()}"
+                    )
                 }
             )
         }
