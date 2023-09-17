@@ -10,6 +10,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -19,6 +20,7 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -38,10 +40,14 @@ import dev.sobhy.meals.util.AppBarState
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-
+    private val viewModel: MainViewModel by viewModels()
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        installSplashScreen().setKeepOnScreenCondition{
+            viewModel.isLoading.value
+        }
+
         setContent {
             MealsTheme {
                 var appBarState by remember {
@@ -49,21 +55,7 @@ class MainActivity : ComponentActivity() {
                 }
                 Scaffold(
                     topBar = {
-                        if(appBarState.show){
-                            TopAppBar(
-                                title = {
-                                    Text(
-                                        text = appBarState.title,
-                                        fontSize = 32.sp,
-                                        fontFamily = FontFamily(Font(R.font.charm_bold)),
-                                        modifier = Modifier.padding(2.dp)
-                                    )
-                                },
-                                actions = {
-                                    appBarState.actions?.invoke(this)
-                                }
-                            )
-                        }
+                        TopBarWithMutableContent(appBarState = appBarState)
                     }
                 ) {
                     Column(modifier = Modifier.padding(it)) {
@@ -144,4 +136,23 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TopBarWithMutableContent(appBarState: AppBarState) {
+    if(!appBarState.show) return
+    TopAppBar(
+        title = {
+            Text(
+                text = appBarState.title,
+                fontSize = 32.sp,
+                fontFamily = FontFamily(Font(R.font.charm_bold)),
+                modifier = Modifier.padding(2.dp)
+            )
+        },
+        actions = {
+            appBarState.actions?.invoke(this)
+        }
+    )
 }
