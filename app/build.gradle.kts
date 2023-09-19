@@ -109,4 +109,13 @@ dependencies {
 
     // for system ui controll
     implementation ("com.google.accompanist:accompanist-systemuicontroller:0.30.1")
+
+    // Pager and Indicators - Accompanist
+    implementation ("com.google.accompanist:accompanist-pager:0.30.1")
+    implementation ("com.google.accompanist:accompanist-pager-indicators:0.30.1")
+
+    // lottie
+    implementation ("com.airbnb.android:lottie-compose:5.2.0")
+    // DataStore Preferences
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
 }

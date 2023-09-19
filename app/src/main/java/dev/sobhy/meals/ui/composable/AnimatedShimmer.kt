@@ -1,4 +1,4 @@
-package dev.sobhy.meals.util
+package dev.sobhy.meals.ui.composable
 
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloat

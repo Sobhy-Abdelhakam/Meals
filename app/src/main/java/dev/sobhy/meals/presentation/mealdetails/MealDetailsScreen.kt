@@ -305,15 +305,15 @@ fun IngredientsScopeContent(meal: Meal) {
                 val ingredientValue = Meal::class.memberProperties
                     .find {
                         it.name == "strIngredient${indexOfForLoop + repeatIndex}"
-                    }?.get(meal) as String
+                    }?.get(meal) as? String
 
                 val measure = Meal::class.memberProperties.find {
                     it.name == "strMeasure${indexOfForLoop + repeatIndex}"
-                }?.get(meal).toString()
+                }?.get(meal) as? String
 
                 // Check if the ingredient value is empty before using it
                 // if the ingredient is empty, this mean that all ingredients after that is empty
-                if (ingredientValue.isBlank()) return
+                if (ingredientValue.isNullOrBlank()) return
 
                 Card(modifier = Modifier.width(80.dp)) {
                     Column(

@@ -1,20 +1,36 @@
 package dev.sobhy.meals
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
+import dev.sobhy.meals.domain.usecase.ReadOnBoardUseCase
+import dev.sobhy.meals.navigation.Screens
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import javax.inject.Inject
 
-class MainViewModel: ViewModel() {
-    private val _isLoading = MutableStateFlow(true)
-    val isLoading = _isLoading.asStateFlow()
+@HiltViewModel
+class MainViewModel @Inject constructor(
+    readOnBoardUseCase: ReadOnBoardUseCase
+): ViewModel() {
+    var splashCondition by mutableStateOf(true)
+        private set
+    var startDestination by mutableStateOf(Screens.Welcome.route)
+        private set
 
     init {
-        viewModelScope.launch {
-            delay(2000)
-            _isLoading.value = false
-        }
+        readOnBoardUseCase().onEach {startFromHome ->
+            startDestination = if(startFromHome){
+                Screens.Home.route
+            } else {
+                Screens.Welcome.route
+            }
+            delay(300)
+            splashCondition = false
+        }.launchIn(viewModelScope)
     }
 }

@@ -27,7 +27,7 @@ import dev.sobhy.meals.domain.model.mealsbything.MealByThing
 import dev.sobhy.meals.navigation.Screens
 import dev.sobhy.meals.presentation.UiState
 import dev.sobhy.meals.ui.composable.ErrorScreen
-import dev.sobhy.meals.util.AnimatedShimmer
+import dev.sobhy.meals.ui.composable.AnimatedShimmer
 import dev.sobhy.meals.util.AppBarState
 
 @Composable

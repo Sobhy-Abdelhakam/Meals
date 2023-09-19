@@ -10,6 +10,7 @@ import dev.sobhy.meals.presentation.favoriteandsearch.FavAndSearchScreen
 import dev.sobhy.meals.presentation.home.HomeScreen
 import dev.sobhy.meals.presentation.mealdetails.MealDetailsScreen
 import dev.sobhy.meals.presentation.meals.MealsListScreen
+import dev.sobhy.meals.presentation.onboard.WelcomeScreen
 import dev.sobhy.meals.util.AppBarState
 
 @Composable
@@ -23,6 +24,9 @@ fun SetupNavGraph(
         navController = navController,
         startDestination = startDestination
     ) {
+        composable(Screens.Welcome.route){
+            WelcomeScreen(navController = navController)
+        }
         composable(Screens.Home.route) {
             HomeScreen(
                 navController = navController,

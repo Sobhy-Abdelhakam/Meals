@@ -35,8 +35,10 @@ class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        installSplashScreen().setKeepOnScreenCondition {
-            viewModel.isLoading.value
+        installSplashScreen().apply {
+            setKeepOnScreenCondition {
+                viewModel.splashCondition
+            }
         }
         setContent {
             MealsTheme {
@@ -50,9 +52,10 @@ class MainActivity : ComponentActivity() {
                 ) {
                     Column(modifier = Modifier.padding(it)) {
                         val navController = rememberNavController()
+                        val startDestination = viewModel.startDestination
                         SetupNavGraph(
                             navController = navController,
-                            startDestination = Screens.Home.route,
+                            startDestination = startDestination,
                             changeAppBarState = {state ->
                                 appBarState = state
                             }
