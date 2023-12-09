@@ -19,20 +19,18 @@ object AppEntryModule {
     @Singleton
     fun provideDataStoreManager(
         @ApplicationContext
-        appContext: Context
+        appContext: Context,
     ): DataStoreManager = DataStoreManagerImpl(appContext)
 
     @Provides
     @Singleton
     fun provideReadOnBoardUseCase(
-        dataStoreManager: DataStoreManager
+        dataStoreManager: DataStoreManager,
     ) = ReadOnBoardUseCase(dataStoreManager)
+
     @Provides
     @Singleton
     fun provideSaveOnBoardUseCase(
-        dataStoreManager: DataStoreManager
+        dataStoreManager: DataStoreManager,
     ) = SaveOnBoardUseCase(dataStoreManager)
-
-
-
 }

@@ -11,10 +11,10 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 class DataStoreManagerImpl(
-    private val context: Context
-): DataStoreManager {
+    private val context: Context,
+) : DataStoreManager {
     override suspend fun saveOnBoardingState() {
-        context.dataStore.edit {preferences ->
+        context.dataStore.edit { preferences ->
             preferences[PreferencesKey.onBoardingKey] = true
         }
     }
@@ -32,4 +32,3 @@ private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(na
 private object PreferencesKey {
     val onBoardingKey = booleanPreferencesKey(name = "on_boarding_completed")
 }
-

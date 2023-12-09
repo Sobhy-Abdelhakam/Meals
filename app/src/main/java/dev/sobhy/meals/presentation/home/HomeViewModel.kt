@@ -18,7 +18,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val categoriesAndAreasUseCases: CategoriesAndAreasUseCases
+    private val categoriesAndAreasUseCases: CategoriesAndAreasUseCases,
 ) : ViewModel() {
     private val _homeState = MutableStateFlow(HomeState())
     val homeState = _homeState.asStateFlow()
@@ -79,5 +79,5 @@ data class HomeState(
     val isLoading: Boolean = false,
     val mealDetails: Meal? = null,
     val categoryResponse: List<Category> = emptyList(),
-    val areasResponse: List<Area> = emptyList()
+    val areasResponse: List<Area> = emptyList(),
 )

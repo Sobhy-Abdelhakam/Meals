@@ -15,8 +15,8 @@ object RepositoryModule {
     @Provides
     fun provideRepository(
         apiService: ApiService,
-        roomDao: RoomDao
-    ):Repository{
+        roomDao: RoomDao,
+    ): Repository {
         return RepositoryImpl(apiService, roomDao)
     }
 }

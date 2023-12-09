@@ -3,6 +3,7 @@ package dev.sobhy.meals.presentation.home
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.scrollable
@@ -32,8 +33,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -41,17 +40,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
-import dev.sobhy.meals.navigation.Screens
 import dev.sobhy.meals.ui.composable.Loader
-import dev.sobhy.meals.util.AppBarState
+import dev.sobhy.meals.util.MyAppScaffold
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -59,51 +56,24 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun HomeScreen(
-    viewModel: HomeViewModel = hiltViewModel(),
-    navController: NavHostController,
-    onComposing: (AppBarState) -> Unit
+    state: HomeState,
+    getRandomMeal: () -> Unit,
+    searchIconClick: () -> Unit,
+    favoriteIconClick: () -> Unit,
+    randomMealClick: (Int) -> Unit,
+    areasMealClick: (String) -> Unit,
+    categoriesMealsClick: (String) -> Unit,
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val job = remember { mutableStateOf<Job?>(null) }
 
     DisposableEffect(key1 = context) {
-        onComposing(
-            AppBarState(
-                show = true,
-                title = "Meals",
-                actions = {
-                    IconButton(onClick = {
-                        navController.navigate(
-                            "${Screens.FavAndSearchScreen.route}/search"
-                        )
-                    }) {
-                        Icon(
-                            imageVector = Icons.Filled.Search,
-                            contentDescription = "Search",
-                            modifier = Modifier
-                                .padding(6.dp),
-                        )
-                    }
-                    IconButton(onClick = {
-                        navController.navigate(
-                            "${Screens.FavAndSearchScreen.route}/favorites"
-                        )
-                    }) {
-                        Icon(
-                            imageVector = Icons.Filled.Favorite,
-                            contentDescription = "Favorite",
-                            modifier = Modifier
-                                .padding(6.dp),
-                        )
-                    }
-                }
-            )
-        )
         job.value = coroutineScope.launch {
             while (isActive) {
-                viewModel.getRandomMeal()
+                getRandomMeal()
                 delay(5000)
+                Log.e("HomeScreenDisposable: ", "DisposableEffect")
             }
         }
         onDispose {
@@ -111,43 +81,74 @@ fun HomeScreen(
         }
     }
 
-    val state by viewModel.homeState.collectAsState()
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .scrollable(
-                rememberScrollState(),
-                orientation = Orientation.Vertical,
-                enabled = true
+    MyAppScaffold(
+        title = "Meals",
+        actions = {
+            ActionIcon(
+                iconClick = searchIconClick,
+                icon = Icons.Filled.Search,
+                contentDescription = "Search",
             )
+            ActionIcon(
+                iconClick = favoriteIconClick,
+                icon = Icons.Filled.Favorite,
+                contentDescription = "Favorite",
+            )
+        },
     ) {
-        Box { Loader(shouldShow = state.isLoading) }
-        RandomMealCard(state = state, navController = navController, context = context)
+        Column(
+            modifier = Modifier
+                .padding(it)
+                .fillMaxSize()
+                .scrollable(
+                    rememberScrollState(),
+                    orientation = Orientation.Vertical,
+                    enabled = true,
+                ),
+        ) {
+            Box { Loader(shouldShow = state.isLoading) }
+            RandomMealCard(state = state, randomMealClick = randomMealClick, context = context)
 
-        Spacer(modifier = Modifier.height(10.dp))
-        Text(text = "Categories", fontWeight = FontWeight.Bold, modifier = Modifier.padding(6.dp))
-        CategoriesLazyGrid(state = state, navController = navController)
+            Spacer(modifier = Modifier.height(10.dp))
+            Text(text = "Categories", fontWeight = FontWeight.Bold, modifier = Modifier.padding(6.dp))
+            CategoriesLazyGrid(state = state, categoriesMealsClick = categoriesMealsClick)
 
-        Spacer(modifier = Modifier.height(10.dp))
-        Text(text = "Areas", fontWeight = FontWeight.Bold, modifier = Modifier.padding(6.dp))
-        AreasLazyGrid(state = state, navController = navController)
+            Spacer(modifier = Modifier.height(10.dp))
+            Text(text = "Areas", fontWeight = FontWeight.Bold, modifier = Modifier.padding(6.dp))
+            AreasLazyGrid(state = state, areasMealClick = areasMealClick)
+        }
     }
 }
 
 @Composable
-fun RandomMealCard(state: HomeState, navController: NavHostController, context: Context) {
+fun ActionIcon(
+    iconClick: () -> Unit,
+    icon: ImageVector,
+    contentDescription: String,
+) {
+    IconButton(onClick = iconClick) {
+        Icon(
+            imageVector = icon,
+            contentDescription = contentDescription,
+            modifier = Modifier
+                .padding(6.dp),
+        )
+    }
+}
+
+@Composable
+fun RandomMealCard(state: HomeState, randomMealClick: (Int) -> Unit, context: Context) {
     Card(modifier = Modifier.padding(8.dp)) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .fillMaxHeight(0.25f)
+                .fillMaxHeight(0.25f),
         ) {
             if (isNetworkConnected(context).not()) {
                 Text(
                     text = "No internet connection",
                     fontSize = 23.sp,
-                    modifier = Modifier.align(Alignment.Center)
+                    modifier = Modifier.align(Alignment.Center),
                 )
             } else {
                 state.mealDetails?.let {
@@ -158,10 +159,8 @@ fun RandomMealCard(state: HomeState, navController: NavHostController, context: 
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
-                                navController.navigate(
-                                    "${Screens.MealDetails.route}/${it.idMeal.toInt()}"
-                                )
-                            }
+                                randomMealClick.invoke(it.idMeal.toInt())
+                            },
                     )
                     Text(
                         text = it.strMeal,
@@ -170,7 +169,7 @@ fun RandomMealCard(state: HomeState, navController: NavHostController, context: 
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier
                             .align(Alignment.BottomStart)
-                            .padding(16.dp)
+                            .padding(16.dp),
                     )
                 }
             }
@@ -179,7 +178,7 @@ fun RandomMealCard(state: HomeState, navController: NavHostController, context: 
 }
 
 @Composable
-fun CategoriesLazyGrid(state: HomeState, navController: NavHostController) {
+fun CategoriesLazyGrid(state: HomeState, categoriesMealsClick: (String) -> Unit) {
     LazyHorizontalGrid(
         contentPadding = PaddingValues(8.dp),
         rows = GridCells.Fixed(2),
@@ -190,9 +189,7 @@ fun CategoriesLazyGrid(state: HomeState, navController: NavHostController) {
                 modifier = Modifier
                     .padding(horizontal = 4.dp)
                     .clickable {
-                        navController.navigate(
-                            "${Screens.MealsList.route}/category/${it.strCategory}"
-                        )
+                        categoriesMealsClick.invoke(it.strCategory)
                     },
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
@@ -202,7 +199,7 @@ fun CategoriesLazyGrid(state: HomeState, navController: NavHostController) {
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .size(70.dp)
-                        .clip(CircleShape)
+                        .clip(CircleShape),
                 )
                 Text(text = it.strCategory)
             }
@@ -211,7 +208,7 @@ fun CategoriesLazyGrid(state: HomeState, navController: NavHostController) {
 }
 
 @Composable
-fun AreasLazyGrid(state: HomeState, navController: NavHostController) {
+fun AreasLazyGrid(state: HomeState, areasMealClick: (String) -> Unit) {
     LazyHorizontalGrid(
         contentPadding = PaddingValues(8.dp),
         rows = GridCells.Fixed(3),
@@ -219,13 +216,11 @@ fun AreasLazyGrid(state: HomeState, navController: NavHostController) {
         items(state.areasResponse) {
             OutlinedButton(
                 onClick = {
-                    navController.navigate(
-                        "${Screens.MealsList.route}/area/${it.strArea}"
-                    )
+                    areasMealClick.invoke(it.strArea)
                 },
                 modifier = Modifier
                     .padding(6.dp)
-                    .width(125.dp)
+                    .width(125.dp),
             ) {
                 Text(text = it.strArea)
             }

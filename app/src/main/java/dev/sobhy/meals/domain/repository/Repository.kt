@@ -16,6 +16,6 @@ interface Repository {
     fun getMealsByArea(area: String): Flow<List<MealByThing>>
 
     suspend fun insertFavoriteMeal(meal: Meal)
-    suspend fun deleteMealFromFavorite(meal:Meal)
+    suspend fun deleteMealFromFavorite(meal: Meal)
     fun getFavoriteMeals(): Flow<List<Meal>>
 }

@@ -10,10 +10,10 @@ import javax.inject.Inject
 
 @HiltViewModel
 class WelcomeViewModel @Inject constructor(
-    private val saveOnBoardUseCase: SaveOnBoardUseCase
-): ViewModel() {
+    private val saveOnBoardUseCase: SaveOnBoardUseCase,
+) : ViewModel() {
 
-    fun saveOnBoardState(){
+    fun saveOnBoardState() {
         viewModelScope.launch(Dispatchers.IO) {
             saveOnBoardUseCase()
         }

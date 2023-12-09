@@ -1,11 +1,12 @@
 package dev.sobhy.meals.presentation.favoriteandsearch
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dev.sobhy.meals.presentation.UiState
 import dev.sobhy.meals.domain.model.meal.Meal
 import dev.sobhy.meals.domain.usecase.FavAndSearchUseCase
+import dev.sobhy.meals.presentation.UiState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,12 +17,22 @@ import javax.inject.Inject
 
 @HiltViewModel
 class FavAndSearchViewModel @Inject constructor(
-    private val useCases: FavAndSearchUseCase
+    private val useCases: FavAndSearchUseCase,
+    savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
     private val _favState = MutableStateFlow<UiState<List<Meal>?>>(UiState.Success(emptyList()))
     val favState = _favState.asStateFlow()
 
-    fun getFavoriteMeals(){
+    private val from = savedStateHandle.get<String>("from") ?: "favorite"
+
+    init {
+        makeListEmpty()
+        if (from == "favorites") {
+            getFavoriteMeals()
+        }
+    }
+
+    fun getFavoriteMeals() {
         viewModelScope.launch(Dispatchers.Main) {
             _favState.value = UiState.Loading
             useCases.getFavoriteMeals()
@@ -29,13 +40,13 @@ class FavAndSearchViewModel @Inject constructor(
                 .catch { e ->
                     _favState.value = UiState.Error(e.toString())
                 }
-                .collect{listOfMeal ->
+                .collect { listOfMeal ->
                     _favState.value = UiState.Success(listOfMeal)
                 }
         }
     }
 
-    fun getMealsContainString(text: String){
+    fun getMealsContainString(text: String) {
         viewModelScope.launch(Dispatchers.Main) {
             _favState.value = UiState.Loading
             useCases.getMealsContainString(text)
@@ -43,13 +54,13 @@ class FavAndSearchViewModel @Inject constructor(
                 .catch { e ->
                     _favState.value = UiState.Error(e.toString())
                 }
-                .collect{listOfMeal ->
+                .collect { listOfMeal ->
                     _favState.value = UiState.Success(listOfMeal)
                 }
         }
     }
 
-    fun makeListEmpty(){
+    fun makeListEmpty() {
         _favState.value = UiState.Success(emptyList())
     }
 }

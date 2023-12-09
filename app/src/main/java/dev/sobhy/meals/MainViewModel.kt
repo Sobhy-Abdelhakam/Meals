@@ -15,21 +15,21 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
-    readOnBoardUseCase: ReadOnBoardUseCase
-): ViewModel() {
+    readOnBoardUseCase: ReadOnBoardUseCase,
+) : ViewModel() {
     var splashCondition by mutableStateOf(true)
         private set
     var startDestination by mutableStateOf(Screens.Welcome.route)
         private set
 
     init {
-        readOnBoardUseCase().onEach {startFromHome ->
-            startDestination = if(startFromHome){
+        readOnBoardUseCase().onEach { startFromHome ->
+            startDestination = if (startFromHome) {
                 Screens.Home.route
             } else {
                 Screens.Welcome.route
             }
-            delay(300)
+            delay(2000)
             splashCondition = false
         }.launchIn(viewModelScope)
     }

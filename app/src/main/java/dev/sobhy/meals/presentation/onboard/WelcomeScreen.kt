@@ -24,27 +24,24 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavHostController
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.google.accompanist.pager.HorizontalPagerIndicator
-import dev.sobhy.meals.navigation.Screens
 import dev.sobhy.meals.util.OnBoardingPage
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun WelcomeScreen(
-    navController: NavHostController,
-    welcomeViewModel: WelcomeViewModel = hiltViewModel()
+    skipClick: () -> Unit,
+    getStartButton: () -> Unit,
 ) {
     val pages = listOf(
         OnBoardingPage.First,
         OnBoardingPage.Second,
         OnBoardingPage.Third,
-        OnBoardingPage.Fourth
+        OnBoardingPage.Fourth,
     )
     val pagerState = rememberPagerState { 4 }
     Column(modifier = Modifier.fillMaxSize()) {
@@ -55,15 +52,13 @@ fun WelcomeScreen(
                 .padding(32.dp)
                 .align(Alignment.End)
                 .clickable {
-                    welcomeViewModel.saveOnBoardState()
-                    navController.popBackStack()
-                    navController.navigate(Screens.Home.route)
-                }
+                    skipClick.invoke()
+                },
         )
         HorizontalPager(
             state = pagerState,
             verticalAlignment = Alignment.Top,
-            modifier = Modifier.weight(9f)
+            modifier = Modifier.weight(9f),
         ) { position ->
             PagerScreen(onBoardingPage = pages[position])
         }
@@ -74,15 +69,13 @@ fun WelcomeScreen(
             pageCount = 4,
             modifier = Modifier
                 .align(Alignment.CenterHorizontally)
-                .weight(1f)
+                .weight(1f),
         )
         GetStartedButton(
             modifier = Modifier.weight(1f),
-            pagerState = pagerState
+            pagerState = pagerState,
         ) {
-            welcomeViewModel.saveOnBoardState()
-            navController.popBackStack()
-            navController.navigate(Screens.Home.route)
+            getStartButton.invoke()
         }
     }
 }
@@ -92,23 +85,22 @@ fun WelcomeScreen(
 fun GetStartedButton(
     modifier: Modifier,
     pagerState: PagerState,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     Row(
-        modifier= modifier.padding(horizontal = 40.dp),
+        modifier = modifier.padding(horizontal = 40.dp),
         verticalAlignment = Alignment.Top,
-        horizontalArrangement = Arrangement.Center
+        horizontalArrangement = Arrangement.Center,
     ) {
         AnimatedVisibility(
             visible = pagerState.currentPage == 3,
-            modifier = modifier.fillMaxWidth()
+            modifier = modifier.fillMaxWidth(),
         ) {
             Button(onClick = onClick) {
                 Text(text = "GetStarted")
             }
         }
     }
-
 }
 
 @Composable
@@ -116,16 +108,16 @@ fun PagerScreen(onBoardingPage: OnBoardingPage) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Top
+        verticalArrangement = Arrangement.Top,
     ) {
         val composition by rememberLottieComposition(spec = LottieCompositionSpec.RawRes(onBoardingPage.image))
         val progress by animateLottieCompositionAsState(composition = composition)
         LottieAnimation(
             composition = composition,
-            progress = {progress},
+            progress = { progress },
             modifier = Modifier
                 .fillMaxWidth(0.5f)
-                .fillMaxHeight(0.7f)
+                .fillMaxHeight(0.7f),
         )
 
         Text(
@@ -133,7 +125,7 @@ fun PagerScreen(onBoardingPage: OnBoardingPage) {
             style = MaterialTheme.typography.headlineLarge,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         )
         Text(
             text = onBoardingPage.description,
@@ -142,7 +134,7 @@ fun PagerScreen(onBoardingPage: OnBoardingPage) {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 40.dp)
-                .padding(top = 20.dp)
+                .padding(top = 20.dp),
         )
     }
 }

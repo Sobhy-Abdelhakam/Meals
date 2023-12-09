@@ -14,13 +14,13 @@ interface ApiService {
     @GET("search.php")
     suspend fun getMealsByName(
         @Query("s")
-        name: String
+        name: String,
     ): MealDetails
 
     @GET("lookup.php")
     suspend fun getMealById(
         @Query("i")
-        id: Int
+        id: Int,
     ): MealDetails
 
     @GET("random.php")
@@ -29,13 +29,13 @@ interface ApiService {
     @GET("filter.php")
     suspend fun getMealsByCategory(
         @Query("c")
-        category: String
+        category: String,
     ): MealsByThingList
 
     @GET("filter.php")
     suspend fun getMealsByArea(
         @Query("a")
-        area: String
+        area: String,
     ): MealsByThingList
 
     @GET("list.php?a=list")

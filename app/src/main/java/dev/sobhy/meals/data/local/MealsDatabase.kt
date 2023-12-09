@@ -7,6 +7,6 @@ import dev.sobhy.meals.domain.model.category.Category
 import dev.sobhy.meals.domain.model.meal.Meal
 
 @Database(entities = [Category::class, Area::class, Meal::class], version = 1)
-abstract class MealsDatabase: RoomDatabase() {
+abstract class MealsDatabase : RoomDatabase() {
     abstract fun mealsDao(): RoomDao
 }

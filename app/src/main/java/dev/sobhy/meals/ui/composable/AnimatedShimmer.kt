@@ -23,11 +23,10 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun AnimatedShimmer() {
-
     val shimmerColor = listOf(
         Color.LightGray.copy(alpha = 0.6f),
         Color.LightGray.copy(alpha = 0.2f),
-        Color.LightGray.copy(alpha = 0.6f)
+        Color.LightGray.copy(alpha = 0.6f),
     )
 
     val transition = rememberInfiniteTransition(label = "")
@@ -37,15 +36,16 @@ fun AnimatedShimmer() {
         animationSpec = infiniteRepeatable(
             animation = tween(
                 durationMillis = 1000,
-                easing = FastOutSlowInEasing
-            )
-        ), label = ""
+                easing = FastOutSlowInEasing,
+            ),
+        ),
+        label = "",
     )
 
     val brush = Brush.linearGradient(
         colors = shimmerColor,
         start = Offset.Zero,
-        end = Offset(x = translateAnimation.value, y = translateAnimation.value)
+        end = Offset(x = translateAnimation.value, y = translateAnimation.value),
     )
 
     ShimmerMealsList(brush = brush)
@@ -55,7 +55,7 @@ fun AnimatedShimmer() {
 fun ShimmerMealsList(brush: Brush) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(2),
-        userScrollEnabled = false
+        userScrollEnabled = false,
     ) {
         items(20) {
             ShimmerMealsItems(brush = brush)
@@ -67,14 +67,13 @@ fun ShimmerMealsList(brush: Brush) {
 fun ShimmerMealsItems(brush: Brush) {
     Surface(
         modifier = Modifier.padding(8.dp),
-        shape = CardDefaults.shape
+        shape = CardDefaults.shape,
     ) {
         Spacer(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(250.dp)
-                .background(brush)
+                .background(brush),
         )
     }
-
 }

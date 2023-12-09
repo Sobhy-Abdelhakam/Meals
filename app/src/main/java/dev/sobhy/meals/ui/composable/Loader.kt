@@ -28,12 +28,11 @@ fun Loader(shouldShow: Boolean = true) {
                 .height(150.dp)
                 .width(200.dp),
             verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             CircularProgressIndicator()
             Spacer(modifier = Modifier.height(20.dp))
             Text(text = "Loading..", fontSize = 20.sp, color = Color.Black)
         }
-
     }
 }

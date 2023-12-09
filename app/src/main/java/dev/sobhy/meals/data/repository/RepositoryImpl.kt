@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.flow
 
 class RepositoryImpl(
     private val apiService: ApiService,
-    private val roomDao: RoomDao
+    private val roomDao: RoomDao,
 ) : Repository {
 
     override fun getCategoryResponse() = flow {
@@ -23,7 +23,6 @@ class RepositoryImpl(
             Log.e("repository", e.message.toString())
         }
     }
-
 
     override fun getMealDetails(id: Int) = flow {
         val idsOfFavoriteMeals = roomDao.getFavoriteMeals().map {
@@ -40,7 +39,6 @@ class RepositoryImpl(
     override fun getMealsContainString(name: String) = flow {
         emit(apiService.getMealsByName(name).meals)
     }
-
 
     override fun getRandomMeal() = flow {
         emit(apiService.getSingleRandomMeal().meals.first())
@@ -64,15 +62,11 @@ class RepositoryImpl(
 
     override fun getMealsByArea(area: String) = flow {
         emit(apiService.getMealsByArea(area).meals)
-
     }
-
 
     override suspend fun insertFavoriteMeal(meal: Meal) = roomDao.insertFavoriteMeal(meal)
     override suspend fun deleteMealFromFavorite(meal: Meal) = roomDao.deleteMealFromFavorite(meal)
     override fun getFavoriteMeals() = flow {
         emit(roomDao.getFavoriteMeals())
     }
-
-
 }

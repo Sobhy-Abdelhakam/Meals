@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,18 +27,14 @@ import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -47,17 +42,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.YouTubePlayer
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.listeners.AbstractYouTubePlayerListener
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.views.YouTubePlayerView
-import dev.sobhy.meals.presentation.UiState
 import dev.sobhy.meals.domain.model.meal.Meal
+import dev.sobhy.meals.presentation.UiState
 import dev.sobhy.meals.ui.composable.ErrorScreen
 import dev.sobhy.meals.ui.composable.Loader
-import dev.sobhy.meals.util.AppBarState
 import me.onebone.toolbar.CollapsingToolbarScaffold
 import me.onebone.toolbar.ScrollStrategy
 import me.onebone.toolbar.rememberCollapsingToolbarScaffoldState
@@ -65,48 +57,39 @@ import kotlin.reflect.full.memberProperties
 
 @Composable
 fun MealDetailsScreen(
-    mealViewModel: MealDetailsViewModel = hiltViewModel(),
-    navController: NavHostController,
-    mealId: Int?,
-    onComposing: (AppBarState) -> Unit
+    state: UiState<Meal>,
+    onFavoriteIconClick: (Meal) -> Unit,
+    onRefreshButtonClick: () -> Unit,
+    onBackButtonClick: () -> Unit,
 ) {
-    LaunchedEffect(key1 = Unit){
-        mealViewModel.getMeal(mealId!!)
-        onComposing(
-            AppBarState(
-                show = false,
-                title = "",
-                actions = { }
-            )
-        )
-    }
     val context = LocalContext.current
-    val state by mealViewModel.mealState.collectAsState()
 
     when (state) {
         is UiState.Loading -> Box { Loader() }
         is UiState.Success -> {
-            val meal = (state as UiState.Success).data
+            val meal = state.data
             DetailsScreenContent(
-                meal,
-                mealViewModel,
-                navController,
-                context
+                meal = meal,
+                onFavoriteIconClick = {
+                    onFavoriteIconClick(it)
+                },
+                onBackButtonClick = onBackButtonClick,
+                context = context,
             )
         }
-        is UiState.Error -> ErrorScreen {
-                mealViewModel.getMeal(mealId!!)
-            }
-    }
 
+        is UiState.Error -> ErrorScreen {
+            onRefreshButtonClick()
+        }
+    }
 }
 
 @Composable
 fun DetailsScreenContent(
     meal: Meal,
-    mealViewModel: MealDetailsViewModel,
-    navController: NavHostController,
-    context: Context
+    onFavoriteIconClick: (Meal) -> Unit,
+    onBackButtonClick: () -> Unit,
+    context: Context,
 ) {
     CollapsingToolbarScaffold(
         modifier = Modifier.fillMaxWidth(),
@@ -115,65 +98,19 @@ fun DetailsScreenContent(
         toolbar = {
             ToolbarContent(
                 meal = meal,
-                mealViewModel = mealViewModel,
-                navController = navController
+                onFavoriteIconClick = {
+                    onFavoriteIconClick(it)
+                },
+                onBackButtonClick = onBackButtonClick,
             )
         },
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
+                .background(MaterialTheme.colorScheme.background),
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row {
-                    Icon(
-                        imageVector = Icons.Filled.Fastfood,
-                        contentDescription = "Category Icon"
-                    )
-                    Text(
-                        text = meal.strCategory,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(start = 4.dp)
-                    )
-                }
-                Row {
-                    Icon(
-                        imageVector = Icons.Outlined.Flag,
-                        contentDescription = "Area Icon",
-                    )
-                    Text(
-                        text = meal.strArea,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(start = 4.dp)
-                    )
-                }
-                IconButton(onClick = {
-                    if (meal.strYoutube.isNotEmpty()) {
-                        context.startActivity(
-                            Intent(
-                                Intent.ACTION_VIEW,
-                                Uri.parse(meal.strYoutube)
-                            )
-                        )
-                    }
-
-                }) {
-                    Icon(
-                        imageVector = Icons.Filled.SmartDisplay,
-                        contentDescription = "YouTube Icon",
-                        modifier = Modifier.size(40.dp),
-                        tint = Color.Red
-                    )
-                }
-
-            }
+            ContentHeader(meal, context)
             Card(
                 shape = RoundedCornerShape(topStart = 50.dp, topEnd = 50.dp),
             ) {
@@ -181,7 +118,7 @@ fun DetailsScreenContent(
                     modifier = Modifier
                         .fillMaxSize()
                         .verticalScroll(rememberScrollState())
-                        .padding(16.dp)
+                        .padding(16.dp),
                 ) {
                     Text(
                         text = meal.strMeal,
@@ -190,42 +127,30 @@ fun DetailsScreenContent(
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center,
                         modifier = Modifier
-                            .fillMaxWidth()
+                            .fillMaxWidth(),
                     )
-
-                    Text(
-                        text = "- Ingredients",
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(vertical = 8.dp)
-                    )
-                    IngredientsScopeContent(meal = meal)
-
-                    Text(
-                        text = "- Instructions",
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(vertical = 8.dp)
-                    )
-                    Text(
-                        text = meal.strInstructions,
-                        modifier = Modifier.padding(8.dp),
-                        textAlign = TextAlign.Center
-                    )
-
-                    Text(
-                        text = "- Watch meal prep",
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(vertical = 8.dp)
-                    )
-                    if (meal.strYoutube.isNotEmpty()) {
-                        YoutubeScreen(videoUrl = meal.strYoutube)
-                    } else {
+                    MealContentSection(title = "- Ingredients") {
+                        IngredientsScopeContent(meal = meal)
+                    }
+                    MealContentSection(title = "- Instructions") {
                         Text(
-                            text = "There is no video for this meal",
+                            text = meal.strInstructions,
+                            modifier = Modifier.padding(8.dp),
                             textAlign = TextAlign.Center,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp)
                         )
+                    }
+                    MealContentSection(title = "- Watch meal prep") {
+                        if (meal.strYoutube.isNotEmpty()) {
+                            YoutubeScreen(videoUrl = meal.strYoutube)
+                        } else {
+                            Text(
+                                text = "There is no video for this meal",
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                            )
+                        }
                     }
                 }
             }
@@ -234,10 +159,71 @@ fun DetailsScreenContent(
 }
 
 @Composable
+fun MealContentSection(title: String, content: @Composable () -> Unit) {
+    Text(
+        text = title,
+        fontWeight = FontWeight.Bold,
+        modifier = Modifier.padding(vertical = 8.dp),
+    )
+    content()
+}
+
+@Composable
+fun ContentHeader(meal: Meal, context: Context) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Row {
+            Icon(
+                imageVector = Icons.Filled.Fastfood,
+                contentDescription = "Category Icon",
+            )
+            Text(
+                text = meal.strCategory,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(start = 4.dp),
+            )
+        }
+        Row {
+            Icon(
+                imageVector = Icons.Outlined.Flag,
+                contentDescription = "Area Icon",
+            )
+            Text(
+                text = meal.strArea,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(start = 4.dp),
+            )
+        }
+        IconButton(onClick = {
+            if (meal.strYoutube.isNotEmpty()) {
+                context.startActivity(
+                    Intent(
+                        Intent.ACTION_VIEW,
+                        Uri.parse(meal.strYoutube),
+                    ),
+                )
+            }
+        }) {
+            Icon(
+                imageVector = Icons.Filled.SmartDisplay,
+                contentDescription = "YouTube Icon",
+                modifier = Modifier.size(40.dp),
+                tint = Color.Red,
+            )
+        }
+    }
+}
+
+@Composable
 fun ToolbarContent(
     meal: Meal,
-    mealViewModel: MealDetailsViewModel,
-    navController: NavHostController
+    onFavoriteIconClick: (Meal) -> Unit,
+    onBackButtonClick: () -> Unit,
 ) {
     AsyncImage(
         model = meal.strMealThumb,
@@ -245,49 +231,53 @@ fun ToolbarContent(
         contentScale = ContentScale.FillBounds,
         modifier = Modifier
             .fillMaxWidth()
-            .height(300.dp)
+            .height(300.dp),
     )
+    ToolbarActionIcons(
+        isFavorite = meal.isFavorite,
+        onFavoriteIconClick = { onFavoriteIconClick(meal) },
+        onBackButtonClick = onBackButtonClick,
+    )
+}
+
+@Composable
+fun ToolbarActionIcons(
+    isFavorite: Boolean,
+    onFavoriteIconClick: () -> Unit,
+    onBackButtonClick: () -> Unit,
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
+        horizontalArrangement = Arrangement.SpaceBetween,
     ) {
+        ToolbarIcons(onIconClick = onBackButtonClick, icon = Icons.Rounded.ArrowBack)
+
+        ToolbarIcons(
+            onIconClick = onFavoriteIconClick,
+            icon = Icons.Filled.Favorite,
+            tint = if (isFavorite) Color.Red else Color.LightGray,
+        )
+    }
+}
+
+@Composable
+fun ToolbarIcons(
+    onIconClick: () -> Unit,
+    icon: ImageVector,
+    tint: Color = LocalContentColor.current,
+) {
+    IconButton(onClick = { onIconClick() }) {
         Icon(
-            imageVector = Icons.Rounded.ArrowBack,
-            contentDescription = "",
+            imageVector = icon,
+            contentDescription = null,
+            tint = tint,
             modifier = Modifier
                 .size(40.dp)
-                .background(color = MaterialTheme.colorScheme.background, shape = CircleShape)
-                .padding(8.dp)
-                .clickable {
-                    navController.popBackStack()
-                }
+                .background(MaterialTheme.colorScheme.background, shape = CircleShape)
+                .padding(8.dp),
         )
-        var favoriteIconState by remember {
-            mutableStateOf(meal.isFavorite)
-        }
-        IconButton(onClick = {
-            favoriteIconState = if (meal.isFavorite.not()) {
-                mealViewModel.insertFavoriteMeal(meal)
-                true
-            } else {
-                mealViewModel.deleteMealFromFavorite(meal)
-                false
-            }
-        }) {
-            Icon(
-                imageVector = Icons.Filled.Favorite,
-                contentDescription = "",
-                tint = if (favoriteIconState) Color.Red else Color.LightGray,
-                modifier = Modifier
-                    .size(40.dp)
-                    .background(MaterialTheme.colorScheme.background, shape = CircleShape)
-                    .padding(8.dp)
-            )
-
-        }
-
     }
 }
 
@@ -298,7 +288,7 @@ fun IngredientsScopeContent(meal: Meal) {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(2.dp),
-            horizontalArrangement = Arrangement.SpaceAround
+            horizontalArrangement = Arrangement.SpaceAround,
         ) {
             repeat(4) { repeatIndex ->
                 // reflection using kotlin
@@ -319,19 +309,19 @@ fun IngredientsScopeContent(meal: Meal) {
                     Column(
                         modifier = Modifier.fillMaxSize(),
                         verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally
+                        horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         AsyncImage(
                             model = "https://www.themealdb.com/images/ingredients/$ingredientValue.png",
                             contentDescription = "",
                             contentScale = ContentScale.Crop,
-                            modifier = Modifier.size(80.dp)
+                            modifier = Modifier.size(80.dp),
                         )
                         Text(
                             text = "$measure $ingredientValue",
                             modifier = Modifier
                                 .padding(4.dp)
-                                .align(Alignment.CenterHorizontally)
+                                .align(Alignment.CenterHorizontally),
                         )
                     }
                 }
@@ -351,7 +341,7 @@ fun YoutubeScreen(videoUrl: String) {
                     super.onReady(youTubePlayer)
                     youTubePlayer.cueVideo(videoId, 0f)
                 }
-            }
+            },
         )
         view
     })

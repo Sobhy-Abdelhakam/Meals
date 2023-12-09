@@ -4,35 +4,34 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import dagger.hilt.android.AndroidEntryPoint
 import dev.sobhy.meals.navigation.Screens
-import dev.sobhy.meals.navigation.SetupNavGraph
+import dev.sobhy.meals.presentation.favoriteandsearch.FavAndSearchScreen
+import dev.sobhy.meals.presentation.favoriteandsearch.FavAndSearchViewModel
+import dev.sobhy.meals.presentation.home.HomeScreen
+import dev.sobhy.meals.presentation.home.HomeViewModel
+import dev.sobhy.meals.presentation.mealdetails.MealDetailsScreen
+import dev.sobhy.meals.presentation.mealdetails.MealDetailsViewModel
+import dev.sobhy.meals.presentation.meals.MealsListScreen
+import dev.sobhy.meals.presentation.meals.MealsListViewModel
+import dev.sobhy.meals.presentation.onboard.WelcomeScreen
+import dev.sobhy.meals.presentation.onboard.WelcomeViewModel
 import dev.sobhy.meals.ui.theme.MealsTheme
-import dev.sobhy.meals.util.AppBarState
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     private val viewModel: MainViewModel by viewModels()
 
-    @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         installSplashScreen().apply {
@@ -42,46 +41,140 @@ class MainActivity : ComponentActivity() {
         }
         setContent {
             MealsTheme {
-                var appBarState by remember {
-                    mutableStateOf(AppBarState())
-                }
-                Scaffold(
-                    topBar = {
-                        TopBarWithMutableContent(appBarState = appBarState)
-                    }
-                ) {
-                    Column(modifier = Modifier.padding(it)) {
-                        val navController = rememberNavController()
-                        val startDestination = viewModel.startDestination
-                        SetupNavGraph(
-                            navController = navController,
-                            startDestination = startDestination,
-                            changeAppBarState = {state ->
-                                appBarState = state
-                            }
-                        )
-                    }
-                }
+                SetupNavGraph(startDestination = viewModel.startDestination)
             }
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TopBarWithMutableContent(appBarState: AppBarState) {
-    if (!appBarState.show) return
-    TopAppBar(
-        title = {
-            Text(
-                text = appBarState.title,
-                fontSize = 32.sp,
-                fontFamily = FontFamily(Font(R.font.charm_bold)),
-                modifier = Modifier.padding(2.dp)
+fun SetupNavGraph(
+    startDestination: String,
+) {
+    val navController = rememberNavController()
+    NavHost(
+        navController = navController,
+        startDestination = startDestination,
+    ) {
+        composable(Screens.Welcome.route) {
+            val welcomeViewModel: WelcomeViewModel = hiltViewModel()
+            WelcomeScreen(
+                skipClick = {
+                    welcomeViewModel.saveOnBoardState()
+                    navController.popBackStack()
+                    navController.navigate(Screens.Home.route)
+                },
+                getStartButton = {
+                    welcomeViewModel.saveOnBoardState()
+                    navController.popBackStack()
+                    navController.navigate(Screens.Home.route)
+                },
             )
-        },
-        actions = {
-            appBarState.actions?.invoke(this)
         }
-    )
+        composable(Screens.Home.route) {
+            val homeViewModel: HomeViewModel = hiltViewModel()
+            val state by homeViewModel.homeState.collectAsState()
+            HomeScreen(
+                state = state,
+                getRandomMeal = { homeViewModel.getRandomMeal() },
+                searchIconClick = {
+                    navController.navigate(
+                        "${Screens.FavAndSearchScreen.route}/search",
+                    )
+                },
+                favoriteIconClick = {
+                    navController.navigate(
+                        "${Screens.FavAndSearchScreen.route}/favorites",
+                    )
+                },
+                randomMealClick = {
+                    navController.navigate(
+                        "${Screens.MealDetails.route}/$it",
+                    )
+                },
+                areasMealClick = {
+                    navController.navigate(
+                        "${Screens.MealsList.route}/area/$it",
+                    )
+                },
+                categoriesMealsClick = {
+                    navController.navigate(
+                        "${Screens.MealsList.route}/category/$it",
+                    )
+                },
+            )
+        }
+        composable(
+            route = "${Screens.MealsList.route}/{from}/{thing}",
+            arguments = listOf(
+                navArgument("from") { type = NavType.StringType },
+                navArgument("thing") { type = NavType.StringType },
+            ),
+        ) { entry ->
+            val mealsListViewModel: MealsListViewModel = hiltViewModel()
+            val mealsState by mealsListViewModel.mealsState.collectAsState()
+            val thing = entry.arguments?.getString("thing")
+            MealsListScreen(
+                thing = thing,
+                errorRefreshButton = { mealsListViewModel.getData() },
+                mealItemClick = {
+                    navController.navigate(
+                        "${Screens.MealDetails.route}/$it",
+                    )
+                },
+                mealsState = mealsState,
+            )
+        }
+        composable(
+            route = "${Screens.FavAndSearchScreen.route}/{from}",
+            arguments = listOf(
+                navArgument("from") { type = NavType.StringType },
+            ),
+        ) { entry ->
+            val favAndSearchViewModel: FavAndSearchViewModel = hiltViewModel()
+            val favAndSearchState by favAndSearchViewModel.favState.collectAsState()
+            val from = entry.arguments?.getString("from")
+
+            FavAndSearchScreen(
+                favAndSearchState = favAndSearchState,
+                favoriteMeals = { favAndSearchViewModel.getFavoriteMeals() },
+                emptyingList = {
+                    favAndSearchViewModel.makeListEmpty()
+                },
+                searchMeals = {
+                    favAndSearchViewModel.getMealsContainString(it)
+                },
+                from = from,
+                mealItemClick = {
+                    navController.navigate(
+                        "${Screens.MealDetails.route}/$it",
+                    )
+                },
+            )
+        }
+
+        composable(
+            route = "${Screens.MealDetails.route}/{meal_id}",
+            arguments = listOf(
+                navArgument("meal_id") {
+                    type = NavType.IntType
+                },
+            ),
+        ) {
+            val mealViewModel: MealDetailsViewModel = hiltViewModel()
+            val state by mealViewModel.mealState.collectAsState()
+            MealDetailsScreen(
+                state = state,
+                onFavoriteIconClick = {
+                    mealViewModel.toggleFavoriteState(it)
+                },
+                onRefreshButtonClick = {
+                    mealViewModel.getData()
+                },
+                onBackButtonClick = {
+                    navController.popBackStack()
+                },
+            )
+        }
+    }
 }
